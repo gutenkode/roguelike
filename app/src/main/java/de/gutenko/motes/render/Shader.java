@@ -5,8 +5,6 @@ import android.util.Log;
 
 import java.util.HashMap;
 
-import de.gutenko.promptmobile.promptdata.Const;
-
 public class Shader {
 
     private static HashMap<String, Integer> shaderMap = new HashMap<>();
@@ -34,12 +32,12 @@ public class Shader {
         return prog;
     }
     public static void loadAll() {
-        load("flatVert", "flatFrag", Const.SHADER_FLAT);
+        /*load("flatVert", "flatFrag", Const.SHADER_FLAT);
         load("texVert", "texFrag", Const.SHADER_TEXTURE);
         load("texVert", "crtFrag", Const.SHADER_CRT);
         load("quadVert", "persistFrag", Const.SHADER_PERSIST);
         load("quadVert", "quadFrag", Const.SHADER_QUAD);
-        load("quadVert", "blurFrag", Const.SHADER_BLUR);
+        load("quadVert", "blurFrag", Const.SHADER_BLUR);*/
     }
 
     /**
