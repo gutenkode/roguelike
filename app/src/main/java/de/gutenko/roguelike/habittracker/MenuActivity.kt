@@ -1,8 +1,9 @@
-package de.gutenko.roguelike
+package de.gutenko.roguelike.habittracker
 
 import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import de.gutenko.roguelike.R
 import de.gutenko.roguelike.loop.MainActivity
 import kotlinx.android.synthetic.main.activity_menu.*
 

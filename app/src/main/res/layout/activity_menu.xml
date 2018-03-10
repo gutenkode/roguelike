@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="de.gutenko.roguelike.MenuActivity">
+    tools:context="de.gutenko.roguelike.habittracker.MenuActivity">
 
     <Button
         android:id="@+id/newGameButton"
