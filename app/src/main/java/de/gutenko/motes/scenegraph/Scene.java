@@ -5,5 +5,6 @@ package de.gutenko.motes.scenegraph;
  */
 
 public interface Scene {
-    void render();
+    void onDrawFrame();
+    void onSurfaceChanged(int width, int height);
 }

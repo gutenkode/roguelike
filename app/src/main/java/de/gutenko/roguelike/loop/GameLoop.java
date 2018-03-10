@@ -13,6 +13,8 @@ import de.gutenko.motes.render.Texture;
 import de.gutenko.motes.scenegraph.Scene;
 import de.gutenko.roguelike.scenes.DungeonScene;
 
+import static android.opengl.GLES10.*;
+
 public class GameLoop implements GLSurfaceView.Renderer {
 
     private static GameLoop instance;
@@ -49,6 +51,7 @@ public class GameLoop implements GLSurfaceView.Renderer {
     // set display/aspect ratio stuff
     @Override
     public void onSurfaceChanged(GL10 gl10, int width, int height) {
+        currentScene.onSurfaceChanged(width, height);
         this.width = width;
         this.height = height;
         GLES20.glViewport(0, 0, width, height);
@@ -63,8 +66,9 @@ public class GameLoop implements GLSurfaceView.Renderer {
     // draw a frame
     @Override
     public void onDrawFrame(GL10 gl10) {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         Shader.setMatrix(screenMatrix);
-        currentScene.render();
+        currentScene.onDrawFrame();
     }
 
     private void makeFramebufferCurrent() {

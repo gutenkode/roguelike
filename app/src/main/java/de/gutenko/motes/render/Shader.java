@@ -36,10 +36,11 @@ public class Shader {
     public static void loadAll() {
         load("flatVert", "flatFrag", Const.SHADER_FLAT);
         load("texVert", "texFrag", Const.SHADER_TEXTURE);
-        load("texVert", "crtFrag", Const.SHADER_CRT);
-        load("quadVert", "persistFrag", Const.SHADER_PERSIST);
+        //load("texVert", "crtFrag", Const.SHADER_CRT);
+        //load("quadVert", "persistFrag", Const.SHADER_PERSIST);
         load("quadVert", "quadFrag", Const.SHADER_QUAD);
-        load("quadVert", "blurFrag", Const.SHADER_BLUR);
+        load("spriteVert", "quadFrag", Const.SHADER_SPRITE);
+        //load("quadVert", "blurFrag", Const.SHADER_BLUR);
     }
 
     /**

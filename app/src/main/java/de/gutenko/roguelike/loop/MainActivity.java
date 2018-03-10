@@ -14,6 +14,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import de.gutenko.motes.render.Shader;
+import de.gutenko.motes.render.Texture;
+import de.gutenko.motes.render.mesh.FontUtils;
+import de.gutenko.roguelike.R;
+import de.gutenko.roguelike.data.Const;
+
 
 public class MainActivity extends Activity implements View.OnTouchListener {
     private Surface surface;
@@ -22,6 +28,8 @@ public class MainActivity extends Activity implements View.OnTouchListener {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        loadResources();
 
         // Create a GLSurfaceView instance and set it as the ContentView for this Activity
         surface = new Surface(this);
@@ -39,7 +47,36 @@ public class MainActivity extends Activity implements View.OnTouchListener {
 
         this.setContentView(surface);
     }
+    private void loadResources() {
+        Resources res = getResources();
 
+        try {
+            /*
+            InputStream is = res.openRawResource(R.raw.terminal_metric);
+            byte[] metric = new byte[256];
+            is.read(metric, 0, 256);
+            is.close();
+            FontUtils.loadMetric(metric, "terminal");
+            FontUtils.useMetric("terminal");
+            FontUtils.setCharPixelWidth(9);
+            */
+            Shader.addSource("flatVert", loadShader(res, R.raw.flatvert));
+            Shader.addSource("flatFrag", loadShader(res, R.raw.flatfrag));
+            Shader.addSource("texVert", loadShader(res, R.raw.texvert));
+            Shader.addSource("texFrag", loadShader(res, R.raw.texfrag));
+            //Shader.addSource("crtFrag", loadShader(res, R.raw.crtfrag));
+            Shader.addSource("quadVert", loadShader(res, R.raw.quadvert));
+            Shader.addSource("quadFrag", loadShader(res, R.raw.quadfrag));
+            //Shader.addSource("persistFrag", loadShader(res, R.raw.persistfrag));
+            //Shader.addSource("blurFrag", loadShader(res, R.raw.blurfrag));
+            Shader.addSource("spriteVert", loadShader(res, R.raw.spritevert));
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+        Texture.loadFile(this.getApplicationContext(), R.drawable.tileset, Const.TEX_TILESET);
+        Texture.loadFile(this.getApplicationContext(), R.drawable.slime, Const.TEX_SLIME);
+    }
     private String loadShader(Resources res, int resHandle) throws IOException {
         InputStream inputStream = res.openRawResource(resHandle);
 
