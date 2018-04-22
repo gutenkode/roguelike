@@ -1,6 +1,7 @@
 package de.gutenko.roguelike.habittracker.data
 
 data class Player(
+    val userId: String,
     val attack: Attribute,
     val agility: Attribute,
     val endurance: Attribute,

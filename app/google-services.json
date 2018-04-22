@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "325787019321",
+    "firebase_url": "https://roguelike-24df6.firebaseio.com",
+    "project_id": "roguelike-24df6",
+    "storage_bucket": "roguelike-24df6.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:325787019321:android:18832c7e8bf05692",
+        "android_client_info": {
+          "package_name": "de.gutenko.roguelike"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "325787019321-c4s64829dv37at5q9bq12gf7sjo6pt7q.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "de.gutenko.roguelike",
+            "certificate_hash": "08118212df209102c9f9e87607622d81a49baaaa"
+          }
+        },
+        {
+          "client_id": "325787019321-di2frf5enu9k6a2vdqec06iufjt8gg5k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyArvM7WIM7lUT8XqZOwLrR5Q4i3SqBxJQU"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "325787019321-di2frf5enu9k6a2vdqec06iufjt8gg5k.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
