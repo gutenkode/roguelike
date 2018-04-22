@@ -26,7 +26,6 @@
                 <action android:name="android.intent.action.VIEW" />
             </intent-filter>
         </activity>
-        <activity android:name=".habittracker.ui.CreateHabitFragment" />
     </application>
 
 </manifest>
