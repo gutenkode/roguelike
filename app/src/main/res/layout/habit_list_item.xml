@@ -7,34 +7,50 @@
 
         <variable
             name="habit"
-            type="de.gutenko.roguelike.habittracker.ui.HabitFragment.HabitViewState" />
+            type="de.gutenko.roguelike.habittracker.ui.HabitPresenter.HabitViewState" />
     </data>
 
     <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="48dp">
+        android:layout_height="72dp">
 
         <android.support.v7.widget.AppCompatCheckBox
             android:id="@+id/checkbox"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:checked="@{habit.habitDone}"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="@+id/appCompatTextView"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <android.support.v7.widget.AppCompatTextView
-            android:id="@+id/appCompatTextView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingEnd="16dp"
-            android:paddingStart="72dp"
-            android:text="@{habit.habitName}"
+            android:checked="@{habit.habitDone || habit.loading}"
+            android:enabled="@{!habit.loading}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:text="I want to do everything everyday and it will be really and neat and cool" />
+            tools:text="" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <android.support.v7.widget.AppCompatTextView
+                android:id="@+id/habitName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingEnd="16dp"
+                android:paddingStart="72dp"
+                android:text="@{habit.habitName}"
+                tools:text="Drink Water" />
+
+            <android.support.v7.widget.AppCompatTextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingEnd="16dp"
+                android:paddingStart="72dp"
+                android:text="@{habit.habitTime}"
+                app:layout_constraintTop_toBottomOf="@id/habitName"
+                tools:text="7:30 PM" />
+        </LinearLayout>
 
     </android.support.constraint.ConstraintLayout>
 </layout>

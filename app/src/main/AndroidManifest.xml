@@ -3,6 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="de.gutenko.roguelike">
 
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:name=".habittracker.RoguelikeApplication"
         android:allowBackup="true"
@@ -26,6 +29,12 @@
                 <action android:name="android.intent.action.VIEW" />
             </intent-filter>
         </activity>
+
+        <receiver
+            android:name=".habittracker.notifications.HabitNotificationBroadcastReceiver"
+            android:enabled="true"
+            android:exported="false"
+            android:permission="none" />
     </application>
 
 </manifest>

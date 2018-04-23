@@ -2,12 +2,12 @@ package de.gutenko.roguelike.habittracker.ui
 
 import android.content.Context
 import android.content.Intent
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.view.Menu
+import android.support.v7.app.AppCompatActivity
 import de.gutenko.roguelike.R
 import de.gutenko.roguelike.loop.MainActivity
-import kotlinx.android.synthetic.main.activity_menu.*
+import kotlinx.android.synthetic.main.activity_menu.newGameButton
+import kotlinx.android.synthetic.main.activity_menu.statsButton
 
 class MenuActivity : AppCompatActivity() {
     private lateinit var userId: String
@@ -22,7 +22,7 @@ class MenuActivity : AppCompatActivity() {
         }
 
         statsButton.setOnClickListener {
-            startActivity(StatsActivity.launchIntent(this, userId))
+            startActivity(StatsActivity.launchIntent(this, userId, markHabitAsDone = null))
         }
     }
 

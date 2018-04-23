@@ -9,7 +9,6 @@ import android.support.v7.app.AlertDialog
 import android.support.v7.widget.AppCompatSeekBar
 import android.view.LayoutInflater
 import android.widget.TimePicker
-import androidx.core.widget.toast
 import dagger.Binds
 import dagger.Module
 import dagger.Subcomponent
@@ -18,10 +17,11 @@ import dagger.android.support.AndroidSupportInjection
 import dagger.android.support.FragmentKey
 import dagger.multibindings.IntoMap
 import de.gutenko.roguelike.R
-import de.gutenko.roguelike.habittracker.data.HabitData
-import de.gutenko.roguelike.habittracker.data.HabitRepository
-import de.gutenko.roguelike.habittracker.data.PlayerUpdate
-import de.gutenko.roguelike.habittracker.data.TimeOfDay
+import de.gutenko.roguelike.habittracker.data.habits.HabitData
+import de.gutenko.roguelike.habittracker.data.habits.HabitRepository
+import de.gutenko.roguelike.habittracker.data.habits.TimeOfDay
+import de.gutenko.roguelike.habittracker.data.player.PlayerUpdate
+import io.reactivex.disposables.CompositeDisposable
 import javax.inject.Inject
 
 @Subcomponent
@@ -44,6 +44,8 @@ class CreateHabitFragment : DialogFragment() {
 
     private lateinit var userId: String
 
+    private val compositeDisposable = CompositeDisposable()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         AndroidSupportInjection.inject(this)
 
@@ -58,7 +60,7 @@ class CreateHabitFragment : DialogFragment() {
 
         return AlertDialog.Builder(requireContext())
             .setView(view)
-            .setPositiveButton("Create") { dialog, _ ->
+            .setPositiveButton(getString(R.string.create)) { dialog, _ ->
                 val habitName = view.findViewById<TextInputEditText>(R.id.habitName)
                 val attackAdd = view.findViewById<AppCompatSeekBar>(R.id.attackAdd)
                 val agilityAdd = view.findViewById<AppCompatSeekBar>(R.id.agilityAdd)
@@ -66,26 +68,35 @@ class CreateHabitFragment : DialogFragment() {
                 val intelligenceAdd = view.findViewById<AppCompatSeekBar>(R.id.intelligenceAdd)
                 val timePicker = view.findViewById<TimePicker>(R.id.habitTimePicker)
 
-                habitRepository.addHabit(
-                    userId,
-                    HabitData(
-                        habitName.text.toString(),
-                        PlayerUpdate(
-                            attackUpdate = attackAdd.progress,
-                            agilityUpdate = agilityAdd.progress,
-                            enduranceUpdate = enduranceAdd.progress,
-                            intelligenceUpdate = intelligenceAdd.progress
-                        ),
-                        TimeOfDay(timePicker.currentHour, timePicker.currentMinute)
-                    )
+                compositeDisposable.add(
+                    habitRepository.addHabit(
+                        userId,
+                        HabitData(
+                            habitName.text.toString(),
+                            PlayerUpdate(
+                                attackUpdate = attackAdd.progress,
+                                agilityUpdate = agilityAdd.progress,
+                                enduranceUpdate = enduranceAdd.progress,
+                                intelligenceUpdate = intelligenceAdd.progress
+                            ),
+                            TimeOfDay(
+                                timePicker.currentHour,
+                                timePicker.currentMinute
+                            )
+                        )
+                    ).subscribe()
                 )
             }
-            .setNegativeButton("Cancel") { _, _ ->
-                requireContext().toast("Canceled")
-            }
+            .setNegativeButton(getString(R.string.cancel)) { _, _ -> /*no-op */ }
             .setCancelable(true)
-            .setTitle("Create Habit")
+            .setTitle(getString(R.string.create_habit))
             .create()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        compositeDisposable.clear()
     }
 
     companion object {

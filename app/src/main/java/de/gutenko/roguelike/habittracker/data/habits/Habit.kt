@@ -1,6 +1,6 @@
-package de.gutenko.roguelike.habittracker.data
+package de.gutenko.roguelike.habittracker.data.habits
 
-import org.joda.time.LocalDate
+import de.gutenko.roguelike.habittracker.data.player.PlayerUpdate
 
 data class Habit(
     val id: String,
@@ -13,6 +13,9 @@ data class Habit(
 
 data class HabitData(val name: String, val playerUpdate: PlayerUpdate, val timeOfDay: TimeOfDay?)
 
-data class TimeOfDay(val hours: Int, val minutes: Int)
-
-data class HabitCompletion(val userId: String, val habitId: String, val day: LocalDate)
+data class TimeOfDay(val hours: Int, val minutes: Int) {
+    init {
+        require(hours in 0..23)
+        require(minutes in 0..59)
+    }
+}

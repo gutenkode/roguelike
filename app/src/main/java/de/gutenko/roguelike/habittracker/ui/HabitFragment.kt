@@ -10,7 +10,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.jakewharton.rxbinding2.view.clicks
-import com.jakewharton.rxbinding2.widget.checkedChanges
 import dagger.Binds
 import dagger.Module
 import dagger.Subcomponent
@@ -21,14 +20,10 @@ import dagger.multibindings.IntoMap
 import de.gutenko.roguelike.BR
 import de.gutenko.roguelike.R
 import de.gutenko.roguelike.databinding.HabitListItemBinding
-import de.gutenko.roguelike.habittracker.changes
-import de.gutenko.roguelike.habittracker.data.HabitCompletionRepository
-import de.gutenko.roguelike.habittracker.data.HabitRepository
-import de.gutenko.roguelike.habittracker.data.Optional
-import io.reactivex.Observable
+import de.gutenko.roguelike.habittracker.data.habits.HabitCompletionRepository
+import de.gutenko.roguelike.habittracker.data.habits.HabitRepository
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import org.joda.time.LocalDate
 import javax.inject.Inject
 
 @Subcomponent
@@ -52,16 +47,19 @@ class HabitFragment : Fragment() {
     lateinit var habitCompletionRepository: HabitCompletionRepository
 
     private lateinit var userId: String
+    private lateinit var presenter: HabitPresenter
 
     private val compositeDisposable = CompositeDisposable()
 
-    private lateinit var habitAdapter: BindingListAdapter<HabitListItemBinding, HabitViewState, Event>
+    private lateinit var habitAdapter: BindingListAdapter<HabitListItemBinding, HabitPresenter.HabitViewState, HabitPresenter.Event>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         AndroidSupportInjection.inject(this)
         super.onCreate(savedInstanceState)
 
         userId = arguments?.getString(userIdKey)!!
+
+        presenter = HabitPresenter(userId, habitRepository, habitCompletionRepository)
     }
 
     override fun onCreateView(
@@ -91,53 +89,20 @@ class HabitFragment : Fragment() {
 
         recyclerView.adapter = habitAdapter
 
-        compositeDisposable.addAll(
-            habitRepository.observeUserHabits(userId)
-                .map { it.sortedBy { it.createdTime } }
-                .flatMap { habits ->
-                    val completionsForToday = habits.map { habit ->
-                        habitCompletionRepository.observeHabitCompletion(
-                            userId,
-                            habit.id,
-                            // TODO: Make this rx
-                            LocalDate.now()
-                        )
-                            .map { wasCompleted ->
-                                when (wasCompleted) {
-                                    is Optional.Some -> HabitViewState(habit.id, habit.name, true)
-                                    is Optional.None -> HabitViewState(habit.id, habit.name, false)
-                                }
-                            }
-                    }
-
-                    // Wait for all view states to come in before producing list
-                    Observable.combineLatest(completionsForToday) { viewStates ->
-                        viewStates.map { it as HabitViewState }.toList()
-                    }
-                }
+        compositeDisposable.add(
+            presenter.viewStates(habitAdapter.events)
+                .distinctUntilChanged()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
                     habitAdapter.submitList(it)
-                },
-
-            habitAdapter.events.flatMapCompletable {
-                when (it) {
-                    is Event.HabitDone -> {
-                        habitCompletionRepository.addCompletion(userId, it.habitId, LocalDate.now())
-                    }
-
-                    is Event.HabitUndone -> {
-                        habitCompletionRepository.addCompletion(userId, it.habitId, LocalDate.now())
-                    }
                 }
-            }.subscribe()
         )
 
         return view
     }
 
-    private fun bindingListAdapter(): BindingListAdapter<HabitListItemBinding, HabitViewState, Event> {
-        return BindingListAdapter.Builder<HabitListItemBinding, HabitViewState, Event>()
+    private fun bindingListAdapter(): BindingListAdapter<HabitListItemBinding, HabitPresenter.HabitViewState, HabitPresenter.Event> {
+        return BindingListAdapter.Builder<HabitListItemBinding, HabitPresenter.HabitViewState, HabitPresenter.Event>()
             .same { firstHabit, secondHabit -> firstHabit == secondHabit }
             .identical { first, second -> first.habitId == second.habitId }
             .variable(BR.habit)
@@ -146,25 +111,20 @@ class HabitFragment : Fragment() {
 
                 binding
                     .checkbox
-                    .checkedChanges()
-                    .changes()
-                    .map<Event> {
+                    .clicks()
+                    .map<HabitPresenter.Event> {
                         when {
-                            it.from == false && it.to == true -> Event.HabitDone(habit.habitId)
-                            it.from == true && it.to == false -> Event.HabitUndone(habit.habitId)
-                            else -> throw IllegalStateException("Self change found")
+                            habit.habitDone -> HabitPresenter.Event.HabitUndone(habit.habitId)
+                            !habit.habitDone -> HabitPresenter.Event.HabitDone(habit.habitId)
+                            else -> {
+                                throw IllegalStateException()
+                            }
                         }
                     }
             }
             .build(R.layout.habit_list_item)
     }
 
-    private sealed class Event {
-        data class HabitDone(val habitId: String) : Event()
-        data class HabitUndone(val habitId: String) : Event()
-    }
-
-    data class HabitViewState(val habitId: String, val habitName: String, val habitDone: Boolean)
 
     companion object {
         private val userIdKey = "userIdKey"

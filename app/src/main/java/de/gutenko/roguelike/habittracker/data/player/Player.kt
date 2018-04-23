@@ -1,4 +1,4 @@
-package de.gutenko.roguelike.habittracker.data
+package de.gutenko.roguelike.habittracker.data.player
 
 data class Player(
     val userId: String,

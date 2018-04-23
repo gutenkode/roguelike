@@ -1,20 +1,25 @@
 package de.gutenko.roguelike.habittracker
 
+import android.app.Activity
 import android.app.Application
 import android.support.v4.app.Fragment
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
+import dagger.android.HasActivityInjector
 import dagger.android.support.HasSupportFragmentInjector
 import de.gutenko.roguelike.habittracker.di.AppComponent
 import de.gutenko.roguelike.habittracker.di.DaggerAppComponent
-import de.gutenko.roguelike.habittracker.di.MemoryAppModule
+import de.gutenko.roguelike.habittracker.di.FirebaseAppModule
 import net.danlew.android.joda.JodaTimeAndroid
 import javax.inject.Inject
 
 @Suppress("unused")
-class RoguelikeApplication : Application(), HasSupportFragmentInjector {
+class RoguelikeApplication : Application(), HasSupportFragmentInjector, HasActivityInjector {
     @Inject
     lateinit var dispatchingFragmentInjector: DispatchingAndroidInjector<Fragment>
+
+    @Inject
+    lateinit var dispatchingActivityInjector: DispatchingAndroidInjector<Activity>
 
     lateinit var appComponent: AppComponent
         private set
@@ -24,7 +29,7 @@ class RoguelikeApplication : Application(), HasSupportFragmentInjector {
         JodaTimeAndroid.init(this)
 
         appComponent = DaggerAppComponent.builder()
-            .memoryAppModule(MemoryAppModule)
+            .firebaseAppModule(FirebaseAppModule)
             .build()
 
         appComponent.inject(this)
@@ -32,5 +37,9 @@ class RoguelikeApplication : Application(), HasSupportFragmentInjector {
 
     override fun supportFragmentInjector(): AndroidInjector<Fragment> {
         return dispatchingFragmentInjector
+    }
+
+    override fun activityInjector(): AndroidInjector<Activity> {
+        return dispatchingActivityInjector
     }
 }
