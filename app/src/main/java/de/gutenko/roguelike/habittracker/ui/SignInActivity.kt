@@ -42,6 +42,7 @@ class SignInActivity : AppCompatActivity() {
             startActivityForResult(intent, 0)
         } else {
             startActivity(MenuActivity.launchIntent(this, currentUser.uid))
+            finish()
         }
     }
 

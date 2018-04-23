@@ -27,6 +27,7 @@ import de.gutenko.roguelike.habittracker.data.habits.Habit
 import de.gutenko.roguelike.habittracker.data.habits.HabitCompletionRepository
 import de.gutenko.roguelike.habittracker.data.habits.HabitRepository
 import de.gutenko.roguelike.habittracker.notifications.HabitNotificationBroadcastReceiver
+import de.gutenko.roguelike.loop.MainActivity
 import kotlinx.android.synthetic.main.activity_stats.*
 import org.joda.time.LocalDate
 import org.joda.time.LocalDateTime
@@ -202,6 +203,7 @@ class StatsActivity : AppCompatActivity() {
         return true
     }
 
+
     override fun onBackPressed() {
         if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
             drawerLayout.closeDrawer(GravityCompat.START)
@@ -212,7 +214,11 @@ class StatsActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.resume_game -> return true
+            R.id.resume_game -> {
+                startActivity(Intent(this, MainActivity::class.java))
+
+                return true
+            }
             else -> return super.onOptionsItemSelected(item)
         }
     }
