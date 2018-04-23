@@ -41,7 +41,7 @@ class SignInActivity : AppCompatActivity() {
 
             startActivityForResult(intent, 0)
         } else {
-            startActivity(MenuActivity.launchIntent(this, "wDowu9JS80PsZgVpZFNIM3qVWzk1"))
+            startActivity(MenuActivity.launchIntent(this, currentUser.uid))
         }
     }
 
@@ -51,7 +51,12 @@ class SignInActivity : AppCompatActivity() {
         when (requestCode) {
             FIREBASE_LOGIN_UI.requestCode -> {
                 if (resultCode == Activity.RESULT_OK) {
-                    startActivity(MenuActivity.launchIntent(this, "wDowu9JS80PsZgVpZFNIM3qVWzk1"))
+                    startActivity(
+                        MenuActivity.launchIntent(
+                            this,
+                            FirebaseAuth.getInstance().currentUser!!.uid
+                        )
+                    )
                 }
             }
         }

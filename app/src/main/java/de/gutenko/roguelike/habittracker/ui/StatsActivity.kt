@@ -100,52 +100,45 @@ class StatsActivity : AppCompatActivity() {
 
         habitRepository.observeUserHabits(userId)
             .subscribe { habits ->
+                val sharedPreferences = getSharedPreferences("alarms", 0)
+
                 habits
                     .filter { it.timeOfDay != null }
                     .forEach { habit ->
                         val habitTime = habit.timeForToday()
 
-                        val pendingIntent =
-                            PendingIntent.getActivity(
-                                applicationContext,
-                                0,
-                                // TODO: link to specific habit somehow in intent
-                                launchIntent(this, userId, null).apply {
-                                    action = habit.id
-                                },
-                                0
+                        val pendingIntent = pendingIntentForHabit(habit)
+
+                        if (!sharedPreferences.getBoolean(habit.id, false)) {
+                            alarmScheduler.scheduleRecurringIntent(
+                                pendingIntent,
+                                habitTime.toDateTime().millis,
+                                TimeUnit.DAYS.toMillis(1)
                             )
 
-                        val doneIntent = PendingIntent.getActivity(
-                            applicationContext, 0, launchIntent(this, userId, habit.id).apply {
-                                action = habit.id
+                            sharedPreferences
+                                .edit()
+                                .putBoolean(habit.id, true)
+                                .apply()
+                        }
+                    }
+
+                val removedHabits =
+                    getSharedPreferences("alarms", 0).all.keys.subtract(habits.map { it.id })
+
+                removedHabits.forEach { habitId ->
+                    alarmManager.cancel(
+                        PendingIntent.getBroadcast(
+                            this,
+                            0,
+                            launchIntent(this, userId, habitId).apply {
+                                action = habitId
                             },
                             0
                         )
-
-                        val intent = HabitNotificationBroadcastReceiver.launchIntent(
-                            this,
-                            habit.name,
-                            "Remember to ${habit.name}",
-                            R.drawable.ic_videogame_asset_black_24dp,
-                            tapIntent = pendingIntent,
-                            notificationChannel = habitChannelId,
-                            doneIntent = doneIntent
-                        ).apply {
-                            flags = Intent.FLAG_INCLUDE_STOPPED_PACKAGES
-                        }
-
-                        alarmScheduler.scheduleRecurringIntent(
-                            PendingIntent.getBroadcast(
-                                this,
-                                0,
-                                intent,
-                                PendingIntent.FLAG_ONE_SHOT
-                            ),
-                            habitTime.toDateTime().millis,
-                            TimeUnit.DAYS.toMillis(1)
-                        )
-                    }
+                    )
+                    sharedPreferences.edit().remove(habitId).apply()
+                }
             }
 
         nav_view.setNavigationItemSelectedListener {
@@ -158,6 +151,50 @@ class StatsActivity : AppCompatActivity() {
                 else -> false
             }
         }
+    }
+
+    private fun pendingIntentForHabit(habit: Habit): PendingIntent {
+        val intent = getLaunchIntentForHabit(habit)
+        val pendingIntent = PendingIntent.getBroadcast(
+            this,
+            0,
+            intent,
+            PendingIntent.FLAG_ONE_SHOT
+        )
+        return pendingIntent
+    }
+
+    private fun getLaunchIntentForHabit(habit: Habit): Intent {
+        val pendingIntent =
+            PendingIntent.getActivity(
+                applicationContext,
+                0,
+                // TODO: link to specific habit somehow in intent
+                launchIntent(this, userId, null).apply {
+                    action = habit.id
+                },
+                0
+            )
+
+        val doneIntent = PendingIntent.getActivity(
+            applicationContext, 0, launchIntent(this, userId, habit.id).apply {
+                action = habit.id
+            },
+            0
+        )
+
+        val intent = HabitNotificationBroadcastReceiver.launchIntent(
+            this,
+            habit.name,
+            "Remember to ${habit.name}",
+            R.drawable.ic_videogame_asset_black_24dp,
+            tapIntent = pendingIntent,
+            notificationChannel = habitChannelId,
+            doneIntent = doneIntent
+        ).apply {
+            flags = Intent.FLAG_INCLUDE_STOPPED_PACKAGES
+        }
+        return intent
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
