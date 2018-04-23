@@ -3,6 +3,7 @@ package de.gutenko.roguelike.habittracker.data.habits
 import com.jakewharton.rxrelay2.BehaviorRelay
 import io.reactivex.Completable
 import io.reactivex.Observable
+import io.reactivex.Single
 
 class MemoryHabitRepository : HabitRepository {
     private var nextHabitId = 0
@@ -30,5 +31,13 @@ class MemoryHabitRepository : HabitRepository {
 
             Completable.complete()
         }
+    }
+
+    override fun removeHabit(userId: String, habitId: String): Completable {
+        TODO("not implemented")
+    }
+
+    override fun getHabit(userId: String, habitId: String): Single<Habit> {
+        TODO("not implemented")
     }
 }

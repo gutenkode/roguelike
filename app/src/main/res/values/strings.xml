@@ -21,4 +21,6 @@
     <string name="your_name">Your name</string>
     <string name="create_player">Create Player</string>
     <string name="what_do_you_want_to_do_daily">What do you want to do daily?</string>
+    <string name="delete_habit">Delete Habit?</string>
+    <string name="habit">Habit</string>
 </resources>

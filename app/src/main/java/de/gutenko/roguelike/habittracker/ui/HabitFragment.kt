@@ -1,5 +1,6 @@
 package de.gutenko.roguelike.habittracker.ui
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.support.design.widget.FloatingActionButton
 import android.support.v4.app.Fragment
@@ -10,6 +11,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.jakewharton.rxbinding2.view.clicks
+import com.jakewharton.rxbinding2.view.longClicks
+import com.jakewharton.rxrelay2.PublishRelay
 import dagger.Binds
 import dagger.Module
 import dagger.Subcomponent
@@ -22,6 +25,8 @@ import de.gutenko.roguelike.R
 import de.gutenko.roguelike.databinding.HabitListItemBinding
 import de.gutenko.roguelike.habittracker.data.habits.HabitCompletionRepository
 import de.gutenko.roguelike.habittracker.data.habits.HabitRepository
+import de.gutenko.roguelike.habittracker.ui.HabitPresenter.Event
+import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import javax.inject.Inject
@@ -89,12 +94,36 @@ class HabitFragment : Fragment() {
 
         recyclerView.adapter = habitAdapter
 
-        compositeDisposable.add(
-            presenter.viewStates(habitAdapter.events)
+        val eventRelay = PublishRelay.create<Event>()
+
+        compositeDisposable.addAll(
+            presenter.viewStates(habitAdapter.events.mergeWith(eventRelay))
                 .distinctUntilChanged()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
                     habitAdapter.submitList(it)
+                },
+
+            presenter.effects().observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    when (it) {
+                        is HabitPresenter.Effect.HabitDeleteSelected -> AlertDialog.Builder(
+                            requireContext()
+                        )
+                            .setTitle(getString(R.string.delete_habit))
+                            .setPositiveButton(android.R.string.yes) { dialog, which ->
+                                eventRelay.accept(Event.HabitDeleted(it.habitId))
+                            }.setNegativeButton(android.R.string.no) { dialog, which ->
+                                // No-op
+                            }
+                            .create()
+                            .show()
+
+                        is HabitPresenter.Effect.HabitSelected -> {
+                            HabitDialogFragment.newInstance(userId, it.habitId)
+                                .show(fragmentManager, "tag")
+                        }
+                    }
                 }
         )
 
@@ -109,18 +138,33 @@ class HabitFragment : Fragment() {
             .eventsFor { binding, i ->
                 val habit = binding.habit!!
 
-                binding
+                val doneUndone = binding
                     .checkbox
                     .clicks()
                     .map<HabitPresenter.Event> {
                         when {
-                            habit.habitDone -> HabitPresenter.Event.HabitUndone(habit.habitId)
-                            !habit.habitDone -> HabitPresenter.Event.HabitDone(habit.habitId)
+                            habit.habitDone -> Event.HabitUndone(habit.habitId)
+                            !habit.habitDone -> Event.HabitDone(habit.habitId)
                             else -> {
                                 throw IllegalStateException()
                             }
                         }
                     }
+
+                val map: Observable<HabitPresenter.Event> = binding
+                    .root
+                    .longClicks()
+                    .map<HabitPresenter.Event> {
+                        Event.HabitDeleteSelected(habit.habitId)
+                    }
+
+                val selects = binding.root
+                    .clicks()
+                    .map {
+                        Event.HabitSelected(habit.habitId)
+                    }
+
+                map.mergeWith(doneUndone).mergeWith(selects)
             }
             .build(R.layout.habit_list_item)
     }

@@ -1,12 +1,15 @@
 package de.gutenko.roguelike.habittracker.data.habits
 
+import com.androidhuman.rxfirebase2.database.data
 import com.androidhuman.rxfirebase2.database.dataChanges
+import com.androidhuman.rxfirebase2.database.rxRemoveValue
 import com.androidhuman.rxfirebase2.database.rxSetValue
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.FirebaseDatabase
 import de.gutenko.roguelike.habittracker.data.player.toPlayerUpdate
 import io.reactivex.Completable
 import io.reactivex.Observable
+import io.reactivex.Single
 
 class FirebaseHabitRepository(private val firebaseDatabase: FirebaseDatabase) :
     HabitRepository {
@@ -25,17 +28,17 @@ class FirebaseHabitRepository(private val firebaseDatabase: FirebaseDatabase) :
                         it.valueExpected("userId"),
                         it.valueExpected("name"),
                         it.child("playerUpdate").toPlayerUpdate(),
-                        timeOfDay(it.child("timeOfDay")),
+                        it.child("timeOfDay").timeOfDay(),
                         it.valueExpected("createdTime")
                     )
                 }
             }
     }
 
-    private fun timeOfDay(dataSnapshot: DataSnapshot): TimeOfDay {
+    private fun DataSnapshot.timeOfDay(): TimeOfDay {
         return TimeOfDay(
-            dataSnapshot.valueExpected("hours"),
-            dataSnapshot.valueExpected("minutes")
+            valueExpected("hours"),
+            valueExpected("minutes")
         )
     }
 
@@ -56,5 +59,22 @@ class FirebaseHabitRepository(private val firebaseDatabase: FirebaseDatabase) :
                     System.currentTimeMillis()
                 )
             )
+    }
+
+    override fun removeHabit(userId: String, habitId: String): Completable {
+        return users.child(userId).child("habits").child(habitId).rxRemoveValue()
+    }
+
+    override fun getHabit(userId: String, habitId: String): Single<Habit> {
+        return users.child(userId).child("habits").child(habitId).data().map {
+            Habit(
+                it.valueExpected("id"),
+                it.valueExpected("userId"),
+                it.valueExpected("name"),
+                it.child("playerUpdate").toPlayerUpdate(),
+                it.child("timeOfDay").timeOfDay(),
+                it.valueExpected("createdTime")
+            )
+        }
     }
 }

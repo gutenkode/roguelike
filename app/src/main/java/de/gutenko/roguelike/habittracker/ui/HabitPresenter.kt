@@ -1,8 +1,10 @@
 package de.gutenko.roguelike.habittracker.ui
 
+import com.jakewharton.rxrelay2.PublishRelay
 import de.gutenko.roguelike.habittracker.data.habits.HabitCompletionRepository
 import de.gutenko.roguelike.habittracker.data.habits.HabitRepository
 import de.gutenko.roguelike.habittracker.data.habits.Optional
+import de.gutenko.roguelike.habittracker.ui.HabitPresenter.Effect.HabitDeleteSelected
 import io.reactivex.Observable
 import org.joda.time.LocalDate
 import org.joda.time.LocalDateTime
@@ -27,7 +29,18 @@ class HabitPresenter(
     sealed class Event {
         data class HabitDone(val habitId: String) : Event()
         data class HabitUndone(val habitId: String) : Event()
+        data class HabitDeleteSelected(val habitId: String) : Event()
+        data class HabitDeleted(val habitId: String) : Event()
+        data class HabitSelected(val habitId: String) : Event()
     }
+
+    sealed class Effect {
+        data class HabitDeleteSelected(val habitId: String) : Effect()
+        data class HabitSelected(val habitId: String) : Effect()
+    }
+
+    private val effectRelay = PublishRelay.create<Effect>()
+    fun effects(): Observable<Effect> = effectRelay
 
     fun viewStates(events: Observable<Event>): Observable<HabitsViewState> {
         val habitsLoaded = habitRepository.observeUserHabits(userId)
@@ -98,6 +111,21 @@ class HabitPresenter(
                         LocalDate.now()
                     ).andThen(Observable.just<Result>(Result.HabitUndone(it.habitId)))
                         .startWith(Result.HabitLoading(it.habitId))
+                is HabitPresenter.Event.HabitDeleteSelected -> {
+                    effectRelay.accept(HabitDeleteSelected(it.habitId))
+                    Observable.empty<Result>()
+                }
+
+                is HabitPresenter.Event.HabitDeleted -> {
+                    // TODO: Pop a snackbar?
+                    habitRepository.removeHabit(userId, it.habitId)
+                        .toObservable<Result>().mergeWith(Observable.never())
+                }
+
+                is HabitPresenter.Event.HabitSelected -> {
+                    effectRelay.accept(Effect.HabitSelected(it.habitId))
+                    Observable.empty<Result>()
+                }
             }
         }
 

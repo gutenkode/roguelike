@@ -9,7 +9,6 @@
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingTop="8dp"
         tools:itemCount="10"
         tools:listitem="@layout/habit_list_item" />
 

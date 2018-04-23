@@ -12,6 +12,7 @@
 
     <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
+        android:background="?selectableItemBackground"
         android:layout_height="72dp">
 
         <android.support.v7.widget.AppCompatCheckBox
