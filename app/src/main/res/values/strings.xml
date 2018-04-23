@@ -14,4 +14,10 @@
     <string name="character">Character</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="attack">Attack</string>
+    <string name="agility">Agility</string>
+    <string name="endurance">Endurance</string>
+    <string name="intelligence">Intelligence</string>
+    <string name="your_name">Your name</string>
+    <string name="create_player">Create Player</string>
 </resources>

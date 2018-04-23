@@ -4,17 +4,18 @@ import com.androidhuman.rxfirebase2.database.dataChanges
 import com.androidhuman.rxfirebase2.database.rxSetValue
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.FirebaseDatabase
-import de.gutenko.roguelike.habittracker.data.player.PlayerUpdate
+import de.gutenko.roguelike.habittracker.data.player.toPlayerUpdate
 import io.reactivex.Completable
 import io.reactivex.Observable
 
 class FirebaseHabitRepository(private val firebaseDatabase: FirebaseDatabase) :
     HabitRepository {
-    private val habitsReference = firebaseDatabase.reference.root.child("habits")
+    private val users = firebaseDatabase.reference.root.child("users")
 
     override fun observeUserHabits(userId: String): Observable<List<Habit>> {
-        return habitsReference
+        return users
             .child(userId)
+            .child("habits")
             .dataChanges()
             .filter { it.exists() }
             .map {
@@ -23,7 +24,7 @@ class FirebaseHabitRepository(private val firebaseDatabase: FirebaseDatabase) :
                         it.valueExpected("id"),
                         it.valueExpected("userId"),
                         it.valueExpected("name"),
-                        playerUpdate(it.child("playerUpdate")),
+                        it.child("playerUpdate").toPlayerUpdate(),
                         timeOfDay(it.child("timeOfDay")),
                         it.valueExpected("createdTime")
                     )
@@ -38,19 +39,12 @@ class FirebaseHabitRepository(private val firebaseDatabase: FirebaseDatabase) :
         )
     }
 
-    private fun playerUpdate(dataSnapshot: DataSnapshot): PlayerUpdate {
-        return PlayerUpdate(
-            dataSnapshot.valueExpected("attackUpdate"),
-            dataSnapshot.valueExpected("agilityUpdate"),
-            dataSnapshot.valueExpected("enduranceUpdate"),
-            dataSnapshot.valueExpected("intelligenceUpdate")
-        )
-    }
-
     override fun addHabit(userId: String, habitData: HabitData): Completable {
-        val push = habitsReference
+        val push = users
             .child(userId)
+            .child("habits")
             .push()
+
         return push
             .rxSetValue(
                 Habit(

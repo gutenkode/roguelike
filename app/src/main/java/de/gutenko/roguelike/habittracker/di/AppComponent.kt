@@ -3,7 +3,6 @@ package de.gutenko.roguelike.habittracker.di
 import dagger.Component
 import dagger.android.AndroidInjectionModule
 import de.gutenko.roguelike.habittracker.RoguelikeApplication
-import de.gutenko.roguelike.habittracker.data.habits.HabitRepository
 import de.gutenko.roguelike.habittracker.ui.*
 import javax.inject.Singleton
 
@@ -16,10 +15,12 @@ import javax.inject.Singleton
         CreateHabitFragmentModule::class,
         GoalsFragmentModule::class,
         CreateGoalFragmentModule::class,
-        StatsActivityModule::class
+        StatsActivityModule::class,
+        PlayerActivityModule::class,
+        CreatePlayerActivityModule::class,
+        MenuActivityModule::class
     ]
 )
 interface AppComponent {
-    fun habitRepository(): HabitRepository
     fun inject(application: RoguelikeApplication)
 }

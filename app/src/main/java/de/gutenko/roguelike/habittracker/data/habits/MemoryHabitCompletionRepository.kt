@@ -8,6 +8,13 @@ import java.util.concurrent.TimeUnit
 
 class MemoryHabitCompletionRepository :
     HabitCompletionRepository {
+    override fun observeCompletionsForPlayer(
+        userId: String,
+        habitId: String
+    ): Observable<List<HabitCompletion>> {
+        TODO("not implemented")
+    }
+
     private val habitCompletionRelay =
         BehaviorRelay.createDefault(emptySet<HabitCompletion>())
 

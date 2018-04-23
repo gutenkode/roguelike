@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.view.Menu
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.AuthUI.IdpConfig.EmailBuilder
 import com.firebase.ui.auth.AuthUI.IdpConfig.GoogleBuilder
@@ -42,7 +41,7 @@ class SignInActivity : AppCompatActivity() {
 
             startActivityForResult(intent, 0)
         } else {
-            startActivity(MenuActivity.launchIntent(this, "userId"))
+            startActivity(MenuActivity.launchIntent(this, "wDowu9JS80PsZgVpZFNIM3qVWzk1"))
         }
     }
 
@@ -52,7 +51,7 @@ class SignInActivity : AppCompatActivity() {
         when (requestCode) {
             FIREBASE_LOGIN_UI.requestCode -> {
                 if (resultCode == Activity.RESULT_OK) {
-                    startActivity(MenuActivity.launchIntent(this, "userId"))
+                    startActivity(MenuActivity.launchIntent(this, "wDowu9JS80PsZgVpZFNIM3qVWzk1"))
                 }
             }
         }

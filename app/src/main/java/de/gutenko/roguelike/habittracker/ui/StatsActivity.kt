@@ -12,7 +12,8 @@ import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentPagerAdapter
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
-import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import dagger.Binds
 import dagger.Module
 import dagger.Subcomponent
@@ -20,21 +21,16 @@ import dagger.android.ActivityKey
 import dagger.android.AndroidInjection
 import dagger.android.AndroidInjector
 import dagger.multibindings.IntoMap
-import de.gutenko.roguelike.BuildConfig
 import de.gutenko.roguelike.R
 import de.gutenko.roguelike.habittracker.data.habits.Habit
 import de.gutenko.roguelike.habittracker.data.habits.HabitCompletionRepository
 import de.gutenko.roguelike.habittracker.data.habits.HabitRepository
 import de.gutenko.roguelike.habittracker.notifications.HabitNotificationBroadcastReceiver
-import kotlinx.android.synthetic.main.activity_stats.drawerLayout
-import kotlinx.android.synthetic.main.activity_stats.pager
-import kotlinx.android.synthetic.main.activity_stats.tabLayout
-import kotlinx.android.synthetic.main.activity_stats.toolbar
+import kotlinx.android.synthetic.main.activity_stats.*
 import org.joda.time.LocalDate
 import org.joda.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
-
 
 @Subcomponent
 interface StatsActivitySubcomponent : AndroidInjector<StatsActivity> {
@@ -63,8 +59,16 @@ class StatsActivity : AppCompatActivity() {
         AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_stats)
+        setSupportActionBar(toolbar)
+
         userId = intent.getStringExtra(userIdKey)
         val markHabitAsDone = intent.getStringExtra(markHabitAsDoneKey)
+
+        // TODO: Make this work
+        if (markHabitAsDone != null) {
+            habitCompletionRepository.addCompletion(userId, markHabitAsDone, LocalDate.now())
+                .subscribe()
+        }
 
         val toggle = ActionBarDrawerToggle(
             this,
@@ -77,20 +81,10 @@ class StatsActivity : AppCompatActivity() {
         drawerLayout.addDrawerListener(toggle)
         toggle.syncState()
 
-        // TODO: Make this work
-        if (markHabitAsDone != null) {
-            habitCompletionRepository.addCompletion(userId, markHabitAsDone, LocalDate.now())
-                .subscribe()
-        }
-
-        setSupportActionBar(toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-
         pager.adapter = StatsPagerAdapter(
             supportFragmentManager,
             userId
         )
-
 
         toolbar.inflateMenu(R.menu.stats_menu)
 
@@ -102,10 +96,6 @@ class StatsActivity : AppCompatActivity() {
 
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val alarmScheduler = LoggingAlarmScheduler(alarmManager)
-
-        if (BuildConfig.DEBUG) {
-            Log.d("StatsActivity", "Debugging")
-        }
 
         habitRepository.observeUserHabits(userId)
             .subscribe { habits ->
@@ -157,6 +147,28 @@ class StatsActivity : AppCompatActivity() {
                     }
             }
 
+        nav_view.setNavigationItemSelectedListener {
+            when (it.itemId) {
+                R.id.character -> {
+                    startActivity(PlayerActivity.launchIntent(this, userId))
+                    true
+                }
+
+                else -> false
+            }
+        }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.stats_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.resume_game -> return true
+            else -> return super.onOptionsItemSelected(item)
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

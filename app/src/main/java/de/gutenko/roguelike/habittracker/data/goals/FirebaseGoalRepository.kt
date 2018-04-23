@@ -1,75 +1,98 @@
 package de.gutenko.roguelike.habittracker.data.goals
 
-import com.androidhuman.rxfirebase2.database.dataChanges
-import com.androidhuman.rxfirebase2.database.rxRemoveValue
-import com.androidhuman.rxfirebase2.database.rxSetValue
-import com.androidhuman.rxfirebase2.database.rxUpdateChildren
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.FirebaseDatabase
+import com.androidhuman.rxfirebase2.database.*
+import com.google.firebase.database.DatabaseReference
 import de.gutenko.roguelike.habittracker.data.habits.valueExpected
 import de.gutenko.roguelike.habittracker.data.habits.valueFor
-import de.gutenko.roguelike.habittracker.data.player.PlayerUpdate
+import de.gutenko.roguelike.habittracker.data.player.*
 import io.reactivex.Completable
 import io.reactivex.Observable
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 
-class FirebaseGoalRepository(private val firebaseDatabase: FirebaseDatabase) : GoalRepository {
+class FirebaseGoalRepository(
+    private val databaseReference: DatabaseReference
+) : GoalRepository {
+    private val users = databaseReference.root.child("users")
+
     override fun observeUserGoals(userId: String): Observable<Set<Goal>> {
-        return goalsReference
+        return users
             .child(userId)
+            .child("goals")
             .dataChanges()
-            .filter { it.exists() }
             .map {
-                it.children
-                    .filter { it.exists() }
-                    .map {
-                        val addedMillis = it.valueExpected<Long>("added")
-                        val added = DateTime(addedMillis, DateTimeZone.UTC).toLocalDateTime()
+                it.children.map {
+                    val addedMillis = it.valueExpected<Long>("added")
+                    val added = DateTime(addedMillis, DateTimeZone.UTC).toLocalDateTime()
 
-                        val completedOn = it.valueFor<Long>("completedOn")?.let {
-                            DateTime(it, DateTimeZone.UTC).toLocalDateTime()
-                        }
-
-                        Goal(
-                            it.valueExpected("id"),
-                            it.valueExpected("userId"),
-                            added,
-                            it.valueExpected("name"),
-                            playerUpdate(it.child("playerUpdate")),
-                            completedOn
-                        )
+                    val completedOn = it.valueFor<Long>("completedOn")?.let {
+                        DateTime(it, DateTimeZone.UTC).toLocalDateTime()
                     }
+
+                    Goal(
+                        it.valueExpected("id"),
+                        it.valueExpected("userId"),
+                        added,
+                        it.valueExpected("name"),
+                        it.child("playerUpdate").toPlayerUpdate(),
+                        completedOn
+                    )
+                }
             }.map { it.toSet() }
     }
 
-    private fun playerUpdate(dataSnapshot: DataSnapshot): PlayerUpdate {
-        return PlayerUpdate(
-            dataSnapshot.valueExpected("attackUpdate"),
-            dataSnapshot.valueExpected("agilityUpdate"),
-            dataSnapshot.valueExpected("enduranceUpdate"),
-            dataSnapshot.valueExpected("intelligenceUpdate")
-        )
-    }
-
-
     override fun completeGoal(goalId: String, userId: String): Completable {
-        return goalsReference
+        val goal = users
             .child(userId)
+            .child("goals")
             .child(goalId)
+
+        return goal
             .rxUpdateChildren(mapOf("completedOn" to DateTime.now(DateTimeZone.UTC).millis))
+            .andThen(
+                goal.child("playerUpdate")
+                    .data()
+                    .map { it.toPlayerUpdate() }
+                    .flatMapCompletable { playerUpdate ->
+                        users.child(userId).child("player").data().map { it.toPlayer() }
+                            .flatMapCompletable { player ->
+                                databaseReference
+                                    .child(userId)
+                                    .rxSetValue(updatePlayer(player, playerUpdate))
+                            }
+                    })
     }
 
     override fun uncompleteGoal(goalId: String, userId: String): Completable {
-        return goalsReference
+        val goal = users
             .child(userId)
+            .child("goals")
             .child(goalId)
+
+        val playerRef = users.child(userId).child("player")
+
+        return goal
             .rxUpdateChildren(mapOf("completedOn" to null))
+            .andThen(
+                goal.child("playerUpdate")
+                    .data()
+                    .map { it.toPlayerUpdate() }
+                    .flatMapCompletable { playerUpdate ->
+                        playerRef.data().map { it.toPlayer() }
+                            .flatMapCompletable { player ->
+                                playerRef.rxSetValue(unUpdatePlayer(player, playerUpdate))
+                            }
+                    }
+            )
     }
 
-    override fun addGoal(userId: String, name: String, playerUpdate: PlayerUpdate): Completable {
-        val push = goalsReference
-            .child(userId)
+    override fun addGoal(
+        userId: String,
+        name: String,
+        playerUpdate: PlayerUpdate
+    ): Completable {
+        val push = users.child(userId)
+            .child("goals")
             .push()
 
         return push.rxSetValue(
@@ -93,9 +116,7 @@ class FirebaseGoalRepository(private val firebaseDatabase: FirebaseDatabase) : G
         val completedOn: Long?
     )
 
-    private val goalsReference = firebaseDatabase.reference.root.child("goals")
-
     override fun removeGoal(goalId: String, userId: String): Completable {
-        return goalsReference.child(userId).child(goalId).rxRemoveValue()
+        return users.child(userId).child("goals").child(goalId).rxRemoveValue()
     }
 }
