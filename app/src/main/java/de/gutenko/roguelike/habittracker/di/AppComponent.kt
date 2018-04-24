@@ -19,7 +19,8 @@ import javax.inject.Singleton
         PlayerActivityModule::class,
         CreatePlayerActivityModule::class,
         MenuActivityModule::class,
-        HabitDialogFragmentModule::class
+        HabitDialogFragmentModule::class,
+        GoalDialogFragmentModule::class
     ]
 )
 interface AppComponent {

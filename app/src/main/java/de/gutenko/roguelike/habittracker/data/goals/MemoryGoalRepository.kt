@@ -4,6 +4,7 @@ import com.jakewharton.rxrelay2.BehaviorRelay
 import de.gutenko.roguelike.habittracker.data.player.PlayerUpdate
 import io.reactivex.Completable
 import io.reactivex.Observable
+import io.reactivex.Single
 import org.joda.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
@@ -23,7 +24,7 @@ class MemoryGoalRepository : GoalRepository {
             .delay(5, TimeUnit.SECONDS)
             .andThen(Completable.defer {
                 val goal = goalRelay.value[goalId]?.copy(completedOn = LocalDateTime.now())
-                        ?: throw IllegalArgumentException("Goal $goalId does not exist")
+                        ?: throw IllegalArgumentException("GoalDeleteConfirm $goalId does not exist")
 
                 goalRelay.accept(goalRelay.value + (goalId to goal))
 
@@ -36,7 +37,7 @@ class MemoryGoalRepository : GoalRepository {
             .delay(5, TimeUnit.SECONDS)
             .andThen(Completable.defer {
                 val goal = goalRelay.value[goalId]?.copy(completedOn = null)
-                        ?: throw IllegalArgumentException("Goal $goalId does not exist")
+                        ?: throw IllegalArgumentException("GoalDeleteConfirm $goalId does not exist")
 
                 goalRelay.accept(goalRelay.value + (goalId to goal))
 
@@ -73,5 +74,9 @@ class MemoryGoalRepository : GoalRepository {
                 Completable.complete()
             })
 
+    }
+
+    override fun getGoal(goalId: String, userId: String): Single<Goal> {
+        TODO("not implemented")
     }
 }

@@ -8,6 +8,7 @@ import android.support.v4.app.Fragment
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.AppCompatSeekBar
 import android.view.LayoutInflater
+import android.widget.SeekBar
 import android.widget.TimePicker
 import dagger.Binds
 import dagger.Module
@@ -21,6 +22,7 @@ import de.gutenko.roguelike.habittracker.data.habits.HabitData
 import de.gutenko.roguelike.habittracker.data.habits.HabitRepository
 import de.gutenko.roguelike.habittracker.data.habits.TimeOfDay
 import de.gutenko.roguelike.habittracker.data.player.PlayerUpdate
+import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
 import javax.inject.Inject
 
@@ -52,6 +54,26 @@ class CreateHabitFragment : DialogFragment() {
         userId = arguments!!.getString(userIdKey)
 
         super.onCreate(savedInstanceState)
+    }
+
+    private fun AppCompatSeekBar.seeks(): Observable<Int> = Observable.create<Int> {
+        val listener = object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                it.onNext(progress)
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+                // No-op
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                // No-op
+            }
+        }
+
+        it.setCancellable { setOnSeekBarChangeListener(null) }
+
+        setOnSeekBarChangeListener(listener)
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {

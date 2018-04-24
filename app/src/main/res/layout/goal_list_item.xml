@@ -1,6 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
@@ -10,32 +8,47 @@
             type="de.gutenko.roguelike.habittracker.ui.GoalsPresenter.GoalViewState" />
     </data>
 
-    <android.support.constraint.ConstraintLayout
+    <RelativeLayout
+        android:id="@+id/two_line_item"
         android:layout_width="match_parent"
-        android:layout_height="48dp">
+        android:layout_height="wrap_content"
+        android:background="?selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:minHeight="56dp"
+        android:paddingEnd="?listPreferredItemPaddingRight"
+        android:paddingStart="?listPreferredItemPaddingLeft">
 
         <android.support.v7.widget.AppCompatCheckBox
             android:id="@+id/checkbox"
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:layout_marginTop="16dp"
+            android:checked="@{goal.completed || goal.loading}"
+            android:enabled="@{!goal.loading}" />
+
+        <LinearLayout
+            android:id="@+id/lines_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:checked="@{goal.completed || goal.loading}"
-            android:enabled="@{!goal.loading}"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="@+id/habitName"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:layout_alignWithParentIfMissing="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_toEndOf="@+id/checkbox"
+            android:orientation="vertical"
+            android:paddingBottom="16dp"
+            android:paddingTop="16dp">
 
-        <android.support.v7.widget.AppCompatTextView
-            android:id="@+id/habitName"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingEnd="16dp"
-            android:paddingStart="72dp"
-            android:text="@{goal.name}"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="I want to do everything everyday and it will be really and neat and cool" />
+            <TextView
+                android:id="@+id/first_text_view"
+                style="@style/TextAppearance.AppCompat.Body2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:text="@{goal.name}"
+                tools:text="First Line" />
 
-    </android.support.constraint.ConstraintLayout>
+        </LinearLayout>
+    </RelativeLayout>
 </layout>

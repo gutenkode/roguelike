@@ -1,14 +1,17 @@
 package de.gutenko.roguelike.habittracker.ui
 
+import com.jakewharton.rxrelay2.PublishRelay
 import de.gutenko.roguelike.habittracker.data.goals.Goal
 import de.gutenko.roguelike.habittracker.data.goals.GoalRepository
 import io.reactivex.Observable
-import io.reactivex.subjects.PublishSubject
 
 class GoalsPresenter(private val goalRepository: GoalRepository, private val userId: String) {
     sealed class Event {
         data class GoalMarkedDone(val goalId: String) : Event()
         data class GoalMarkedUndone(val goalId: String) : Event()
+        data class GoalDelete(val goalId: String) : Event()
+        data class GoalDeletePrompt(val goalId: String) : Event()
+        data class GoalSelected(val goalId: String) : Event()
     }
 
     data class GoalViewState(
@@ -20,10 +23,12 @@ class GoalsPresenter(private val goalRepository: GoalRepository, private val use
     )
 
     sealed class Effect {
-        data class GoalConfirm(val goalId: String) : Effect()
+        data class GoalConfirmUndone(val goalId: String) : Effect()
+        data class GoalDeleteConfirm(val goalId: String) : Effect()
+        data class GoalShow(val goalId: String) : Effect()
     }
 
-    private val effectSubject = PublishSubject.create<Effect>()
+    private val effectSubject = PublishRelay.create<Effect>()
     fun effects(): Observable<Effect> = effectSubject
 
     fun viewStates(events: Observable<Event>): Observable<List<GoalViewState>> {
@@ -41,7 +46,6 @@ class GoalsPresenter(private val goalRepository: GoalRepository, private val use
                 .map { Result.GoalsLoaded(it) }
 
         val viewStates = events
-            .distinctUntilChanged()
             .flatMap {
                 when (it) {
                     is Event.GoalMarkedDone -> {
@@ -55,6 +59,21 @@ class GoalsPresenter(private val goalRepository: GoalRepository, private val use
                             .andThen(Observable.just<Result>(Result.GoalUndone(it.goalId)))
                             .startWith(Result.GoalLoading(it.goalId))
                     }
+
+                    is GoalsPresenter.Event.GoalDeletePrompt -> {
+                        effectSubject.accept(Effect.GoalDeleteConfirm(it.goalId))
+                        Observable.empty()
+                    }
+
+                    is GoalsPresenter.Event.GoalDelete -> {
+                        goalRepository.removeGoal(it.goalId, userId)
+                            .andThen(Observable.never())
+                    }
+
+                    is GoalsPresenter.Event.GoalSelected -> {
+                        effectSubject.accept(Effect.GoalShow(it.goalId))
+                        Observable.empty<Result>()
+                    }
                 }
             }.mergeWith(goalsLoaded)
             .scan(emptyMap<String, GoalViewState>(),
@@ -66,7 +85,7 @@ class GoalsPresenter(private val goalRepository: GoalRepository, private val use
                         }
 
                         is Result.GoalUndone -> {
-                            effectSubject.onNext(Effect.GoalConfirm(result.goalId))
+                            effectSubject.accept(Effect.GoalConfirmUndone(result.goalId))
                             state
                         }
 
@@ -98,7 +117,7 @@ class GoalsPresenter(private val goalRepository: GoalRepository, private val use
             goal.completedOn != null,
             goal.completedOn?.let {
                 "Completed on $it"
-            } ?: "Goal not completed yet!",
+            } ?: "GoalDeleteConfirm not completed yet!",
             loading = false)
     }
 }

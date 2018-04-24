@@ -3,6 +3,7 @@ package de.gutenko.roguelike.habittracker.ui
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v4.app.Fragment
+import android.support.v7.app.AlertDialog
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -10,6 +11,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.jakewharton.rxbinding2.view.clicks
+import com.jakewharton.rxbinding2.view.longClicks
 import com.jakewharton.rxrelay2.PublishRelay
 import dagger.Binds
 import dagger.Module
@@ -42,7 +44,6 @@ abstract class GoalsFragmentModule {
     @FragmentKey(GoalsFragment::class)
     abstract fun bindGoalFragmentInjectorFactory(builder: GoalsFragmentSubcomponent.Builder): AndroidInjector.Factory<out Fragment>
 }
-
 
 typealias GoalAdapter<T, U> = BindingListAdapter<GoalListItemBinding, T, U>
 
@@ -105,7 +106,15 @@ class GoalsFragment : Fragment() {
                             Event.GoalMarkedUndone(goal.goalId)
                         else
                             Event.GoalMarkedDone(goal.goalId)
-                    }
+                    }.mergeWith(
+                        binding.root
+                            .longClicks()
+                            .map { Event.GoalDeletePrompt(goal.goalId) }
+                    ).mergeWith(
+                        binding.root
+                            .clicks()
+                            .map { Event.GoalSelected(goal.goalId) }
+                    )
             }
             .ids { it.goalId.hashCode().toLong() }
             .variable(BR.goal)
@@ -120,9 +129,9 @@ class GoalsFragment : Fragment() {
                 .show(requireFragmentManager(), CreateGoalFragment.tag)
         }
 
-        val goalCompleteRelay = PublishRelay.create<Event.GoalMarkedDone>()
+        val eventRelay = PublishRelay.create<Event>()
 
-        val viewStates = presenter.viewStates(goalAdapter.events.mergeWith(goalCompleteRelay))
+        val viewStates = presenter.viewStates(goalAdapter.events.mergeWith(eventRelay))
 
         compositeDisposable.addAll(
             viewStates.observeOn(AndroidSchedulers.mainThread())
@@ -136,14 +145,27 @@ class GoalsFragment : Fragment() {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
                     when (it) {
-                        is Effect.GoalConfirm -> postSnackbar(goalCompleteRelay, it.goalId)
+                        is Effect.GoalConfirmUndone -> postSnackbar(eventRelay, it.goalId)
+                        is Effect.GoalDeleteConfirm -> AlertDialog.Builder(requireContext())
+                            .setTitle(getString(R.string.delete_goal))
+                            .setPositiveButton("Delete") { dialog, which ->
+                                eventRelay.accept(Event.GoalDelete(it.goalId))
+                            }.setNegativeButton("Cancel") { dialog, which ->
+                                // No-op
+                            }
+                            .show()
+
+                        is GoalsPresenter.Effect.GoalShow -> {
+                            GoalDialogFragment.newInstance(userId, goalId = it.goalId)
+                                .show(fragmentManager, "goal dialog tag")
+                        }
                     }
                 }
         )
     }
 
     private fun postSnackbar(
-        goalCompleteRelay: PublishRelay<Event.GoalMarkedDone>,
+        goalCompleteRelay: PublishRelay<Event>,
         goalId: String
     ) {
         Snackbar.make(
