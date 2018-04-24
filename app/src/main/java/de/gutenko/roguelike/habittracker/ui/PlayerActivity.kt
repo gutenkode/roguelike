@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.view.MenuItem
 import dagger.Binds
 import dagger.Module
 import dagger.Subcomponent
@@ -18,11 +19,11 @@ import de.gutenko.roguelike.BR
 import de.gutenko.roguelike.R
 import de.gutenko.roguelike.databinding.AttributeCardItemBinding
 import de.gutenko.roguelike.habittracker.androidLog
-import de.gutenko.roguelike.habittracker.data.player.Attribute
 import de.gutenko.roguelike.habittracker.ui.PlayerPresenter.AttributeViewState
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
+import kotlinx.android.synthetic.main.activity_player.toolBarLayout
 import kotlinx.android.synthetic.main.activity_player.toolbar
 import javax.inject.Inject
 
@@ -80,8 +81,6 @@ class PlayerActivity : AppCompatActivity() {
         val recyclerView = findViewById<RecyclerView>(R.id.attributeView)
         recyclerView.adapter = adapter
         recyclerView.layoutManager = LinearLayoutManager(this)
-
-        adapter.submitList(listOf(AttributeViewState(Attribute(0, 10), "nalkjdsf")))
     }
 
     override fun onStart() {
@@ -92,16 +91,20 @@ class PlayerActivity : AppCompatActivity() {
                 .androidLog("Attributes")
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { playerViewState ->
-                    toolbar.title = playerViewState.playerName
+                    toolBarLayout.title = playerViewState.playerName
 
                     val (attack, agility, endurance, intelligence) = playerViewState.attributes
 
                     adapter.submitList(
                         listOf(
-                            AttributeViewState(attack, "Attack"),
-                            AttributeViewState(agility, "Agility"),
-                            AttributeViewState(endurance, "Endurance"),
-                            AttributeViewState(intelligence, "Intelligence")
+                            AttributeViewState(attack, "Attack", R.drawable.ic_gladius),
+                            AttributeViewState(agility, "Agility", R.drawable.ic_running_ninja),
+                            AttributeViewState(endurance, "Endurance", R.drawable.ic_atlas),
+                            AttributeViewState(
+                                intelligence,
+                                "Intelligence",
+                                R.drawable.ic_pointy_hat
+                            )
                         )
                     )
 
@@ -113,6 +116,17 @@ class PlayerActivity : AppCompatActivity() {
         super.onStop()
 
         compositeDisposable.clear()
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            android.R.id.home -> {
+                finish()
+                return true
+            }
+
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 
     companion object {

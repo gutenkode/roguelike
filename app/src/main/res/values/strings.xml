@@ -27,4 +27,6 @@
 
     <string name="level">Level %1$s</string>
     <string name="log_out">Log out</string>
+    <string name="player_avatar">Player Avatar</string>
+    <string name="next_level">Next Level</string>
 </resources>
