@@ -9,7 +9,9 @@ public class Const {
     // texture enums
     public static final String
             TEX_TILESET = "tileset",
-            TEX_SLIME = "slime";
+            TEX_SLIME = "slime",
+            TEX_PLAYER = "player",
+            TEX_FONT = "font";
 
     // shader enums
     public static final String

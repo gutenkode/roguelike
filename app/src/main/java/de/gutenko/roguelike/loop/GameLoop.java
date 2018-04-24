@@ -33,7 +33,7 @@ public class GameLoop implements GLSurfaceView.Renderer {
     // init non-rendering data
     private GameLoop() {
         screenMatrix = new MVPMatrix();
-        currentScene = new DungeonScene();
+        currentScene = DungeonScene.getInstance();
     }
 
     // init rendering data

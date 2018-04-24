@@ -19,6 +19,7 @@ import de.gutenko.motes.render.Texture;
 import de.gutenko.motes.render.mesh.FontUtils;
 import de.gutenko.roguelike.R;
 import de.gutenko.roguelike.data.Const;
+import de.gutenko.roguelike.data.Input;
 
 
 public class MainActivity extends Activity implements View.OnTouchListener {
@@ -42,8 +43,9 @@ public class MainActivity extends Activity implements View.OnTouchListener {
                 WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-        // prevent portrait orientation
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE);
+        // prevent rotation
+        //setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT);
 
         this.setContentView(surface);
     }
@@ -51,15 +53,14 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         Resources res = getResources();
 
         try {
-            /*
-            InputStream is = res.openRawResource(R.raw.terminal_metric);
+            InputStream is = res.openRawResource(R.raw.misterpixel_metric);
             byte[] metric = new byte[256];
             is.read(metric, 0, 256);
             is.close();
-            FontUtils.loadMetric(metric, "terminal");
-            FontUtils.useMetric("terminal");
-            FontUtils.setCharPixelWidth(9);
-            */
+            FontUtils.loadMetric(metric, "font");
+            FontUtils.useMetric("font");
+            FontUtils.setCharPixelWidth(16);
+
             Shader.addSource("flatVert", loadShader(res, R.raw.flatvert));
             Shader.addSource("flatFrag", loadShader(res, R.raw.flatfrag));
             Shader.addSource("texVert", loadShader(res, R.raw.texvert));
@@ -74,8 +75,10 @@ public class MainActivity extends Activity implements View.OnTouchListener {
             e.printStackTrace();
             System.exit(1);
         }
-        Texture.loadFile(this.getApplicationContext(), R.drawable.tileset, Const.TEX_TILESET);
+        Texture.loadFile(this.getApplicationContext(), R.drawable.tileset2, Const.TEX_TILESET);
         Texture.loadFile(this.getApplicationContext(), R.drawable.slime, Const.TEX_SLIME);
+        Texture.loadFile(this.getApplicationContext(), R.drawable.player, Const.TEX_PLAYER);
+        Texture.loadFile(this.getApplicationContext(), R.drawable.misterpixel, Const.TEX_FONT);
     }
     private String loadShader(Resources res, int resHandle) throws IOException {
         InputStream inputStream = res.openRawResource(resHandle);
@@ -115,11 +118,17 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         switch(action) {
             case (MotionEvent.ACTION_DOWN):
             case (MotionEvent.ACTION_POINTER_DOWN):
+                Input.touchEventDown(event.getX(),event.getY(),event.getActionIndex());
+                return true;
             case (MotionEvent.ACTION_MOVE):
+                Input.touchEventMove(event.getX(),event.getY(),event.getActionIndex());
+                return true;
             case (MotionEvent.ACTION_UP):
             case (MotionEvent.ACTION_POINTER_UP):
             case (MotionEvent.ACTION_CANCEL):
             case (MotionEvent.ACTION_OUTSIDE):
+                Input.touchEventUp(event.getX(),event.getY(),event.getActionIndex());
+                return true;
             default :
                 return super.onTouchEvent(event);
         }
