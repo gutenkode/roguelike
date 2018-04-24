@@ -29,7 +29,6 @@ import de.gutenko.roguelike.habittracker.data.habits.HabitRepository
 import de.gutenko.roguelike.habittracker.notifications.HabitNotificationBroadcastReceiver
 import de.gutenko.roguelike.loop.MainActivity
 import kotlinx.android.synthetic.main.activity_stats.*
-import org.joda.time.LocalDate
 import org.joda.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -57,6 +56,9 @@ class StatsActivity : AppCompatActivity() {
     @Inject
     lateinit var habitCompletionRepository: HabitCompletionRepository
 
+    @Inject
+    lateinit var playerRepository: PlayerRepository
+
     override fun onCreate(savedInstanceState: Bundle?) {
         AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
@@ -67,10 +69,10 @@ class StatsActivity : AppCompatActivity() {
         val markHabitAsDone = intent.getStringExtra(markHabitAsDoneKey)
 
         // TODO: Make this work
-        if (markHabitAsDone != null) {
-            habitCompletionRepository.addCompletion(userId, markHabitAsDone, LocalDate.now())
-                .subscribe()
-        }
+//        if (markHabitAsDone != null) {
+//            habitCompletionRepository.addCompletion(userId, markHabitAsDone, LocalDate.now())
+//                .subscribe()
+//        }
 
         val toggle = ActionBarDrawerToggle(
             this,
@@ -215,7 +217,12 @@ class StatsActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.resume_game -> {
-                startActivity(Intent(this, MainActivity::class.java))
+                playerRepository.observePlayer(userId)
+                    .take(1)
+                    .subscribe {
+                        startActivity(Intent(this, MainActivity::class.java))
+                    }
+
 
                 return true
             }

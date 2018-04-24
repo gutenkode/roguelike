@@ -14,6 +14,7 @@ import dagger.android.AndroidInjector
 import dagger.multibindings.IntoMap
 import de.gutenko.roguelike.R
 import de.gutenko.roguelike.loop.MainActivity
+import io.reactivex.android.schedulers.AndroidSchedulers
 import kotlinx.android.synthetic.main.activity_menu.newGameButton
 import kotlinx.android.synthetic.main.activity_menu.statsButton
 import javax.inject.Inject
@@ -45,26 +46,43 @@ class MenuActivity : AppCompatActivity() {
         setContentView(R.layout.activity_menu)
         userId = intent.getStringExtra(userIdKey)
 
-        playerRepository.hasPlayer(userId)
-            .subscribe { hasPlayer ->
-                if (hasPlayer) {
-                    newGameButton.setOnClickListener {
-                        startActivity(Intent(this, MainActivity::class.java))
-                    }
+        val playerExists = playerRepository.hasPlayer(userId).toObservable().share()
 
-                    statsButton.setOnClickListener {
-                        startActivity(
-                            StatsActivity.launchIntent(
-                                this,
-                                userId,
-                                markHabitAsDone = null
-                            )
+        newGameButton.isEnabled = false
+        statsButton.isEnabled = false
+
+        playerExists
+            .filter { it }
+            .flatMap { playerRepository.observePlayer(userId) }
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { player ->
+                newGameButton.isEnabled = true
+                newGameButton.setOnClickListener {
+                    startActivity(
+                        Intent(
+                            this,
+                            MainActivity::class.java
                         )
-                    }
-
-                } else {
-                    startActivity(CreatePlayerActivity.newInstance(this, userId))
+                    )
                 }
+
+                statsButton.isEnabled = true
+                statsButton.setOnClickListener {
+                    startActivity(
+                        StatsActivity.launchIntent(
+                            this,
+                            userId,
+                            markHabitAsDone = null
+                        )
+                    )
+                }
+            }
+
+        playerExists
+            .filter { !it }
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe {
+                startActivity(CreatePlayerActivity.launchIntent(this, userId))
             }
     }
 

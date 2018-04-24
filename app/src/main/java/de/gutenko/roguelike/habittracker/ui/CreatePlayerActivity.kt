@@ -56,7 +56,7 @@ class CreatePlayerActivity : AppCompatActivity() {
     companion object {
         private const val userIdKey = "userIdKey"
 
-        fun newInstance(context: Context, userId: String): Intent =
+        fun launchIntent(context: Context, userId: String): Intent =
             Intent(context, CreatePlayerActivity::class.java).apply {
                 putExtra(userIdKey, userId)
             }

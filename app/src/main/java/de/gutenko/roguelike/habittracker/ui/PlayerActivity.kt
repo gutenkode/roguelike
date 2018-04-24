@@ -66,6 +66,10 @@ class PlayerActivity : AppCompatActivity() {
                     userId
                 )
 
+        supportFragmentManager.beginTransaction()
+            .add(R.id.goals, GoalsFragment.newInstance(userId))
+            .commit()
+
         adapter =
                 BindingListAdapter.Builder<AttributeCardItemBinding, PlayerPresenter.AttributeViewState, Unit>()
                     .identical { first, second -> first.name == second.name }

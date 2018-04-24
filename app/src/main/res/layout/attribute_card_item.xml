@@ -57,6 +57,7 @@
                 android:paddingBottom="8dp"
                 android:paddingEnd="8dp"
                 android:paddingStart="8dp"
+                android:progress="@{attributeViewState.attribute.progress}"
                 app:layout_constraintTop_toBottomOf="@+id/nextLevel" />
 
         </android.support.constraint.ConstraintLayout>
