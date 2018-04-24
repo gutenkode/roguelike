@@ -67,6 +67,7 @@ class StatsActivity : AppCompatActivity() {
 
         userId = intent.getStringExtra(userIdKey)
 
+        supportActionBar?.title = "Rogue"
 
         // TODO: Make this work
 //        if (markHabitAsDone != null) {
