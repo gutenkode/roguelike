@@ -12,6 +12,8 @@ import de.gutenko.roguelike.data.pathfind.Pathfind;
 import de.gutenko.roguelike.data.pathfind.State;
 import de.gutenko.roguelike.scenes.DungeonScene;
 
+import static de.gutenko.roguelike.data.Const.TEX_HEALTHBAR;
+
 /**
  * Created by Peter on 3/10/18.
  */
@@ -49,6 +51,8 @@ public abstract class Entity {
     protected Entity targetEntity;
     protected int[] moveValue;
 
+    protected double atk, def, spd, mag;
+
     ////////////////
 
     public void renderStep() {}
@@ -58,9 +62,25 @@ public abstract class Entity {
         Shader.setMatrix(matrix);
         Texture.bindUnfiltered(spriteName);
         Shader.setUniformFloat("spriteInfo",spriteX,spriteY,spriteInd);
-        DungeonScene.quadMesh.setColor(1,health/maxHealth,health/maxHealth,1);
+        //DungeonScene.quadMesh.setColor(1,health/maxHealth,health/maxHealth,1);
         DungeonScene.quadMesh.render();
-        DungeonScene.quadMesh.setColor(1,1,1,1);
+        //DungeonScene.quadMesh.setColor(1,1,1,1);
+    }
+    public void renderHealthBar(MVPMatrix matrix) {
+        if (health < maxHealth) {
+            Texture.bindUnfiltered(TEX_HEALTHBAR);
+            Matrix.translateM(matrix.viewMatrix,0,renderX,renderY,0);
+            Matrix.translateM(matrix.viewMatrix, 0, .125f, -.1f, 0);
+            Matrix.scaleM(matrix.viewMatrix, 0, .75f, 1, 1);
+            Shader.setMatrix(matrix);
+            Shader.setUniformFloat("spriteInfo", 2, 1, 1);
+            DungeonScene.quadMesh.render();
+            Shader.setUniformFloat("spriteInfo", 2, 1, 0);
+            //Matrix.translateM(matrix.viewMatrix, 0, (1-health/maxHealth), 0, 0);
+            Matrix.scaleM(matrix.viewMatrix, 0, health/maxHealth, 1, 1);
+            Shader.setMatrix(matrix);
+            DungeonScene.quadMesh.render();
+        }
     }
 
     public abstract TurnAction act();
@@ -91,9 +111,9 @@ public abstract class Entity {
         attackX = atkValX*(float)Math.sin(attackCoef);
         attackY = atkValY*(float)Math.sin(attackCoef);
 
-        shake *= .5;
+        shake *= .6;
         shake += shakeVel;
-        shakeVel -= shake*.8;
+        shakeVel -= shake*.7;
     }
     public boolean isAnimating() {
         return (renderX != tileX || renderY != tileY ||
@@ -130,16 +150,20 @@ public abstract class Entity {
     }
 
     public void attack() {
-        DungeonScene.getInstance().log(getAttackString(targetEntity));
-        targetEntity.damage(.4f);
+        int dmg = (int)calculateDamage(atk,atk,targetEntity.def);
+        targetEntity.damage(dmg);
         attackCoef = 0;
         atkValX = -(tileX-targetEntity.tileX)/2f; // quick and dirty attack animation
         atkValY = -(tileY-targetEntity.tileY)/2f;
+        DungeonScene.getInstance().log(getAttackString(targetEntity)+"  "+dmg+" damage!");
+    }
+    private double calculateDamage(double skillPower, double atk, double def) {
+        return (skillPower * atk) / ( (skillPower+atk)/2 + def +.0000001);
     }
 
-    protected void damage(float dmg) {
+    protected void damage(double dmg) {
         health -= dmg;
-        shakeVel = .2f;
+        shakeVel = .3f;
         health = Math.max(0,health);
     }
 

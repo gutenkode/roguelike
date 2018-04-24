@@ -17,9 +17,11 @@ import de.gutenko.motes.scenegraph.Scene;
 import de.gutenko.roguelike.data.Const;
 import de.gutenko.roguelike.data.Input;
 import de.gutenko.roguelike.data.map.MapBuilder;
+import de.gutenko.roguelike.data.map.MapDefinition;
 import de.gutenko.roguelike.entities.Enemy;
 import de.gutenko.roguelike.entities.Entity;
-import de.gutenko.roguelike.entities.Player;
+import de.gutenko.roguelike.entities.PlayerEntity;
+import de.gutenko.roguelike.entities.TileSprite;
 
 /**
  * Created by Peter on 2/1/18.
@@ -40,33 +42,45 @@ public class DungeonScene implements Scene {
         return instance;
     }
 
+    private int currentFloor;
     private float aspectRatio, mapScale, logOffset, logAutoClearDelay = 90;
     private boolean[][] solid;
-    private int[][] map;
+    private int[][] tiles;
     private MVPMatrix matrix;
+    List<TileSprite> tileSprites;
     private List<Enemy> enemies, queuedActionEnemies;
     private List<Pair<Entity,Entity.TurnAction>> queuedActions;
     private List<TexMesh> logList;
     private int maxLogLength = 4;
-    private Player player;
+    private PlayerEntity player;
     private boolean isPlayerTurn = true, isPlayingAnimations = false, isProcessingActions = true;
 
     private DungeonScene() {
         matrix = new MVPMatrix();
-        Pair<boolean[][],int[][]> p = MapBuilder.createBorderRoom(8,12);
-        solid = p.first;
-        map = p.second;
-        mapScale = map.length; // number of rows that fit on the screen
-
         logList = new ArrayList<>();
         enemies = new ArrayList<>();
         queuedActionEnemies = new ArrayList<>();
         queuedActions = new ArrayList<>();
 
-        log("Welcome to Floor 1.");
-        player = new Player();
-        for (int i = 0; i < 3; i++)
-            enemies.add(new Enemy());
+        currentFloor = 0;
+        loadNextFloor();
+    }
+    public void loadNextFloor() {
+        currentFloor++;
+
+        enemies.clear();
+        queuedActionEnemies.clear();
+        queuedActions.clear();
+
+        MapDefinition map = MapBuilder.createMap(8,12, currentFloor);
+        solid = map.solid;
+        tiles = map.tiles;
+        player = map.player;
+        enemies = map.enemies;
+        tileSprites = map.tileSprites;
+        mapScale = tiles.length; // number of rows that fit on the screen
+
+        log("Welcome to Floor "+currentFloor+".");
     }
 
     @Override
@@ -76,7 +90,7 @@ public class DungeonScene implements Scene {
         resetMatrix();
 
         // render ground tiles
-        for (int[] i : map) {
+        for (int[] i : tiles) {
             for (int i2 = 0; i2 < i.length; i2++) {
                 Shader.setMatrix(matrix);
                 Shader.setUniformFloat("spriteInfo",8,8, i[i2]);
@@ -84,6 +98,12 @@ public class DungeonScene implements Scene {
                 Matrix.translateM(matrix.viewMatrix, 0, 0, 1, 0);
             }
             Matrix.translateM(matrix.viewMatrix,0, 1,-i.length,0);
+        }
+
+        // render tile sprites
+        for (TileSprite t : tileSprites) {
+            resetMatrix();
+            t.render(matrix);
         }
 
         // render enemies and the player
@@ -95,6 +115,13 @@ public class DungeonScene implements Scene {
         resetMatrix();
         player.renderStep();
         player.render(matrix);
+
+        for (Enemy e : enemies) {
+            resetMatrix();
+            e.renderHealthBar(matrix);
+        }
+        resetMatrix();
+        player.renderHealthBar(matrix);
 
         // render log text
         if (logOffset > 0)
@@ -108,7 +135,7 @@ public class DungeonScene implements Scene {
         Shader.use(Const.SHADER_TEXTURE);
         Texture.bindUnfiltered(Const.TEX_FONT);
         resetMatrix();
-        Matrix.translateM(matrix.viewMatrix,0, .33f,logOffset+.15f+map[0].length,0);
+        Matrix.translateM(matrix.viewMatrix,0, .33f,logOffset+.15f+ tiles[0].length,0);
         for (TexMesh m : logList) {
             Shader.setMatrix(matrix);
             m.render();
@@ -130,7 +157,8 @@ public class DungeonScene implements Scene {
             if (isProcessingActions) {
                 processActions();
                 isProcessingActions = !queuedActions.isEmpty();
-            } else {
+            } else
+            {
                 // only take the next turn once all animations and actions are done
                 if (isPlayerTurn) {
                     Entity.TurnAction a = player.act(); // wait for player input
@@ -155,6 +183,12 @@ public class DungeonScene implements Scene {
                         isProcessingActions = true;
                         isPlayerTurn = true;
                     }
+                }
+
+                // process tile sprite events
+                for (TileSprite t : tileSprites) {
+                    if (t.X == player.tileX && t.Y == player.tileY)
+                        t.onPlayerEnter();
                 }
             }
         }
@@ -211,7 +245,7 @@ public class DungeonScene implements Scene {
     public float getAspectRatio() { return aspectRatio; }
     public float getMapScale() { return mapScale; }
     public boolean isTileWalkable(int x, int y) {
-        if (x < 0 || y < 0 || x > map.length-1 || y > map[0].length-1) // in-bounds check
+        if (x < 0 || y < 0 || x > tiles.length-1 || y > tiles[0].length-1) // in-bounds check
             return false;
        return !solid[x][y];
     }
@@ -223,7 +257,7 @@ public class DungeonScene implements Scene {
             return false;
         return true;
     }
-    public Player getPlayer() { return player; }
+    public PlayerEntity getPlayer() { return player; }
     public Enemy getEnemyAt(int x, int y) {
         for (Enemy e : enemies)
             if (e.tileX == x && e.tileY == y)

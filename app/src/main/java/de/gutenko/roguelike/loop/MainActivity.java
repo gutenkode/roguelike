@@ -77,8 +77,10 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         }
         Texture.loadFile(this.getApplicationContext(), R.drawable.tileset2, Const.TEX_TILESET);
         Texture.loadFile(this.getApplicationContext(), R.drawable.slime, Const.TEX_SLIME);
+        Texture.loadFile(this.getApplicationContext(), R.drawable.rat, Const.TEX_RAT);
         Texture.loadFile(this.getApplicationContext(), R.drawable.player, Const.TEX_PLAYER);
         Texture.loadFile(this.getApplicationContext(), R.drawable.misterpixel, Const.TEX_FONT);
+        Texture.loadFile(this.getApplicationContext(), R.drawable.healthbar, Const.TEX_HEALTHBAR);
     }
     private String loadShader(Resources res, int resHandle) throws IOException {
         InputStream inputStream = res.openRawResource(resHandle);

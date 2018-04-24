@@ -1,10 +1,5 @@
 package de.gutenko.roguelike.entities;
 
-import android.opengl.Matrix;
-
-import de.gutenko.motes.render.MVPMatrix;
-import de.gutenko.motes.render.Shader;
-import de.gutenko.motes.render.Texture;
 import de.gutenko.roguelike.data.Const;
 import de.gutenko.roguelike.data.Input;
 import de.gutenko.roguelike.loop.GameLoop;
@@ -19,13 +14,18 @@ import static de.gutenko.roguelike.entities.Entity.TurnAction.NONE;
  * Created by Peter on 3/10/18.
  */
 
-public class Player extends Entity {
+public class PlayerEntity extends Entity {
+
+    private static PlayerEntity instance;
+    public static PlayerEntity moveInstanceTo(int x, int y) {
+        if (instance == null)
+            instance = new PlayerEntity();
+        instance.moveTo(x,y);
+        return instance;
+    }
 
     private int targetX, targetY;
-    public Player() {
-        renderX = targetX = tileX = 2;
-        renderY = targetY = tileY = 3;
-
+    private PlayerEntity() {
         name = "Player";
         deathStr = "You have died.";
         spriteName = Const.TEX_PLAYER;
@@ -34,8 +34,15 @@ public class Player extends Entity {
         spriteY = 1;
         spriteInd = 0;
 
-        maxHealth = 15;
+        maxHealth = 100;
         health = maxHealth;
+        spd = mag = 10;
+        atk = 15;
+        def = 15;
+    }
+    private void moveTo(int x, int y) {
+        renderX = targetX = tileX = x;
+        renderY = targetY = tileY = y;
     }
 
     @Override
@@ -53,9 +60,11 @@ public class Player extends Entity {
             }
 
             // attack adjacent enemies when tapped
+            int distX = Math.abs(targetX-tileX);
+            int distY = Math.abs(targetY-tileY);
             int tapDistance = Math.abs(targetX-tileX) + Math.abs(targetY-tileY); // manhattan distance from tapped tile to current tile
             // TODO expand to cover all interactions with tiles
-            if (tapDistance == 1) {
+            if (tapDistance == 1 || (distX==1&&distY==1)) {
                 Enemy e = DungeonScene.getInstance().getEnemyAt(targetX,targetY);
                 if (e != null) {
                     targetX = tileX; // don't move while attacking
@@ -84,7 +93,7 @@ public class Player extends Entity {
     }
 
     @Override
-    protected void damage(float dmg) {
+    protected void damage(double dmg) {
         super.damage(dmg);
         // cancel any movement when attacked
         targetX = tileX;

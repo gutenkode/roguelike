@@ -1,10 +1,19 @@
 package de.gutenko.roguelike.data.map;
 
-import android.util.Pair;
+import java.util.ArrayList;
+import java.util.List;
+
+import de.gutenko.roguelike.entities.Enemy;
+import de.gutenko.roguelike.entities.PlayerEntity;
+import de.gutenko.roguelike.entities.StairsTile;
+import de.gutenko.roguelike.entities.TileSprite;
+
+import static de.gutenko.roguelike.entities.Enemy.EnemyType.RAT;
+import static de.gutenko.roguelike.entities.Enemy.EnemyType.SLIME;
 
 public class MapBuilder {
 
-    public static Pair<boolean[][],int[][]> createBorderRoom(int w, int h) {
+    public static MapDefinition createMap(int w, int h, int floorNum) {
         boolean[][] solid = new boolean[w][h];
         int[][] map = new int[w][h];
 
@@ -20,20 +29,37 @@ public class MapBuilder {
             solid[0][i] = true;
             solid[solid.length-1][i] = true;
         }
-        solid[2][2] = true;
-        solid[3][2] = true;
-        solid[5][6] = true;
-        solid[5][7] = true;
-        solid[4][7] = true;
+
+        if (floorNum == 1) {
+            solid[2][2] = true;
+            solid[3][2] = true;
+            solid[5][6] = true;
+            solid[5][7] = true;
+            solid[4][7] = true;
+        } else {
+            solid[6][8] = true;
+            solid[4][8] = true;
+            solid[3][8] = true;
+            solid[3][9] = true;
+            solid[3][10] = true;
+
+            //solid[2][1] = true;
+            solid[2][2] = true;
+            solid[2][3] = true;
+            solid[4][3] = true;
+
+            solid[5][3] = true;
+            solid[6][3] = true;
+        }
 
         // create the tilemap
-        for (int x = 0; x < map.length; x++)
+        for (int x = 0; x < map.length; x++) {
             for (int y = 0; y < map[0].length; y++) {
-                boolean c = test(x,y,solid);
-                boolean u = test(x,y-1,solid);
-                boolean d = test(x,y+1,solid);
-                boolean l = test(x-1,y,solid);
-                boolean r = test(x+1,y,solid);
+                boolean c = test(x, y, solid);
+                boolean u = test(x, y - 1, solid);
+                boolean d = test(x, y + 1, solid);
+                boolean l = test(x - 1, y, solid);
+                boolean r = test(x + 1, y, solid);
                 if (!c) {
                     // floors
 
@@ -43,12 +69,12 @@ public class MapBuilder {
                     else if (!u && !d && l && r)
                         map[x][y] = 35;
 
-                    // floor corners
+                        // floor corners
                     else if (u && l)
                         map[x][y] = 24;
                     else if (u && r)
                         map[x][y] = 26;
-                    else if (d &&  l)
+                    else if (d && l)
                         map[x][y] = 40;
                     else if (d && r)
                         map[x][y] = 42;
@@ -67,14 +93,29 @@ public class MapBuilder {
                 } else {
                     // walls
 
+                    // edges
                     if (l && u && !d && r)
                         map[x][y] = 12;
                     else if (l && !u && !d && !r)
                         map[x][y] = 18;
                     else if (!l && !u && !d && r)
                         map[x][y] = 16;
+                    else if (!l && u && !d && !r)
+                        map[x][y] = 9;
+                    else if (!l && !u && d && !r)
+                        map[x][y] = 8;
 
-                    // corners
+                    // t-walls
+                    else if (l && u && d && !r)
+                        map[x][y] = 13;
+                    else if (!l && u && d && r)
+                        map[x][y] = 11;
+                    else if (l && !u && d && r)
+                        map[x][y] = 4;
+                    else if (l && u && !d && r)
+                        map[x][y] = 1;
+
+                        // corners
                     else if (l && u && !d && !r)
                         map[x][y] = 18;
                     else if (!l && u && !d && r)
@@ -92,7 +133,28 @@ public class MapBuilder {
                         map[x][y] = 9;
                 }
             }
-        return new Pair(solid,map);
+        }
+
+        List<Enemy> enemies = new ArrayList<>();
+        PlayerEntity player;
+        if (floorNum == 1) {
+            player = PlayerEntity.moveInstanceTo(2,3);
+            enemies.add(new Enemy(5, 5, SLIME));
+            enemies.add(new Enemy(4, 6, SLIME));
+            enemies.add(new Enemy(2, 8, RAT));
+        } else {
+            player = PlayerEntity.moveInstanceTo(5,1);
+            enemies.add(new Enemy(3, 4, SLIME));
+            enemies.add(new Enemy(5, 5, SLIME));
+            enemies.add(new Enemy(4, 6, RAT));
+            enemies.add(new Enemy(2, 8, RAT));
+            enemies.add(new Enemy(6, 9, SLIME));
+            enemies.add(new Enemy(4, 10, RAT));
+        }
+        List<TileSprite> tiles = new ArrayList<>();
+        tiles.add(new StairsTile(w-3,h-2));
+
+        return new MapDefinition(solid,map,enemies,tiles,player);
     }
     private static boolean test(int x, int y, boolean[][] solid) {
         if (x >= solid.length || x < 0 || y >= solid[0].length || y < 0)

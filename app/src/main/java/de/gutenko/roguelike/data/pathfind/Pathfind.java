@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import de.gutenko.roguelike.scenes.DungeonScene;
+
 /**
  * Created by Peter on 3/10/18.
  */
@@ -35,8 +37,8 @@ public class Pathfind {
 
         Map<State, State> cameFrom = new HashMap<>();
 
-        Map<State, Integer> gScore = new HashMap<>();
-        gScore.put(start, 0);
+        Map<State, Double> gScore = new HashMap<>();
+        gScore.put(start, 0d);
 
         Map<State, Double> fScore = new HashMap<>();
         fScore.put(start, getHeuristicScore(start, goal));
@@ -55,8 +57,8 @@ public class Pathfind {
                 if (closed.contains(child))
                     continue;
 
-                int childGScore = gScore.get(parent)+1;
-                Integer prevChildGScore = gScore.get(child);
+                double childGScore = gScore.get(parent) + getMoveCost(parent, child, goal);
+                Double prevChildGScore = gScore.get(child);
                 if (prevChildGScore != null && childGScore >= prevChildGScore)
                         continue;
 
@@ -83,6 +85,15 @@ public class Pathfind {
             }
         }
         return minState;
+    }
+
+    private static double getMoveCost(State parent, State child, State goal) {
+        if (child.equals(goal))
+            return .1; // the goal is often an entity, so make sure it's cheap to move to
+        double dist = getHeuristicScore(parent, child);
+        if (!DungeonScene.getInstance().isTileUnoccupied(child.tileX,child.tileY))
+            dist += 15; // high, but not infinity
+        return dist;
     }
 
     private static double getHeuristicScore(State current, State goal) {

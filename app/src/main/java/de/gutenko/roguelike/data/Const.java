@@ -10,8 +10,10 @@ public class Const {
     public static final String
             TEX_TILESET = "tileset",
             TEX_SLIME = "slime",
+            TEX_RAT = "rat",
             TEX_PLAYER = "player",
-            TEX_FONT = "font";
+            TEX_FONT = "font",
+            TEX_HEALTHBAR = "healthbar";
 
     // shader enums
     public static final String
