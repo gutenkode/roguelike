@@ -9,20 +9,21 @@ class PlayerPresenter(
 ) {
     data class PlayerViewState(
         val playerName: String,
-        val attack: Attribute,
-        val agility: Attribute,
-        val endurance: Attribute,
-        val intelligence: Attribute
+        val attributes: List<Attribute>
     )
+
+    data class AttributeViewState(val attribute: Attribute, val name: String)
 
     fun viewStates(): Observable<PlayerViewState> {
         return playerRepository.observePlayer(userId).map {
             PlayerViewState(
                 it.userName,
-                Attribute.of(it.attack),
-                Attribute.of(it.agility),
-                Attribute.of(it.endurance),
-                Attribute.of(it.intelligence)
+                listOf(
+                    Attribute.of(it.attack),
+                    Attribute.of(it.agility),
+                    Attribute.of(it.endurance),
+                    Attribute.of(it.intelligence)
+                )
             )
         }
     }

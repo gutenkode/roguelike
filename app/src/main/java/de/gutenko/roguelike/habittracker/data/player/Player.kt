@@ -2,6 +2,7 @@ package de.gutenko.roguelike.habittracker.data.player
 
 import com.google.firebase.database.DataSnapshot
 import de.gutenko.roguelike.habittracker.data.habits.valueExpected
+import java.io.Serializable
 
 data class Player(
     val userId: String,
@@ -10,7 +11,7 @@ data class Player(
     val agility: Int,
     val endurance: Int,
     val intelligence: Int
-)
+) : Serializable
 
 fun DataSnapshot.toPlayer(): Player = Player(
     valueExpected("userId"),

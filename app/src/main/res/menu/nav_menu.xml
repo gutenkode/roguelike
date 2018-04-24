@@ -5,4 +5,9 @@
         android:icon="@drawable/ic_person_white_24dp"
         android:title="@string/character" />
 
+    <item
+        android:id="@+id/log_out"
+        android:icon="@drawable/ic_exit_to_app_black_24dp"
+        android:title="@string/log_out" />
+
 </menu>

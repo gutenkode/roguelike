@@ -24,4 +24,7 @@
     <string name="delete_habit">Delete Habit?</string>
     <string name="habit">Habit</string>
     <string name="delete_goal">Delete Goal?</string>
+
+    <string name="level">Level %1$s</string>
+    <string name="log_out">Log out</string>
 </resources>
