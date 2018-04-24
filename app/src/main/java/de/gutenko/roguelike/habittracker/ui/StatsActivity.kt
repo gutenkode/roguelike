@@ -66,7 +66,7 @@ class StatsActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
 
         userId = intent.getStringExtra(userIdKey)
-        val markHabitAsDone = intent.getStringExtra(markHabitAsDoneKey)
+
 
         // TODO: Make this work
 //        if (markHabitAsDone != null) {
@@ -112,36 +112,17 @@ class StatsActivity : AppCompatActivity() {
 
                         val pendingIntent = pendingIntentForHabit(habit)
 
-                        if (!sharedPreferences.getBoolean(habit.id, false)) {
-                            alarmScheduler.scheduleRecurringIntent(
-                                pendingIntent,
-                                habitTime.toDateTime().millis,
-                                TimeUnit.DAYS.toMillis(1)
-                            )
-
-                            sharedPreferences
-                                .edit()
-                                .putBoolean(habit.id, true)
-                                .apply()
-                        }
-                    }
-
-                val removedHabits =
-                    getSharedPreferences("alarms", 0).all.keys.subtract(habits.map { it.id })
-
-                removedHabits.forEach { habitId ->
-                    alarmManager.cancel(
-                        PendingIntent.getBroadcast(
-                            this,
-                            0,
-                            launchIntent(this, userId, habitId).apply {
-                                action = habitId
-                            },
-                            0
+                        alarmScheduler.scheduleRecurringIntent(
+                            pendingIntent,
+                            habitTime.toDateTime().millis,
+                            TimeUnit.DAYS.toMillis(1)
                         )
-                    )
-                    sharedPreferences.edit().remove(habitId).apply()
-                }
+
+                        sharedPreferences
+                            .edit()
+                            .putBoolean(habit.id, true)
+                            .apply()
+                    }
             }
 
         nav_view.setNavigationItemSelectedListener {

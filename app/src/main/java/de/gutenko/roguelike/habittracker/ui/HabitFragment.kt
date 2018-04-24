@@ -10,6 +10,7 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import com.jakewharton.rxbinding2.view.clicks
 import com.jakewharton.rxbinding2.view.longClicks
 import com.jakewharton.rxrelay2.PublishRelay
@@ -77,6 +78,9 @@ class HabitFragment : Fragment() {
         val addHabit = view.findViewById<FloatingActionButton>(R.id.addHabit)
         val context = requireContext()
 
+        val emptyView = view.findViewById<LinearLayout>(R.id.empty_view)
+        emptyView.visibility = View.INVISIBLE
+
         addHabit.clicks().subscribe {
             CreateHabitFragment.newInstance(userId)
                 .show(requireFragmentManager(), CreateHabitFragment.tag)
@@ -101,6 +105,13 @@ class HabitFragment : Fragment() {
                 .distinctUntilChanged()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
+                    if (it.isEmpty()) {
+                        emptyView.visibility = View.VISIBLE
+                        recyclerView.visibility = View.GONE
+                    } else {
+                        emptyView.visibility = View.INVISIBLE
+                        recyclerView.visibility = View.VISIBLE
+                    }
                     habitAdapter.submitList(it)
                 },
 

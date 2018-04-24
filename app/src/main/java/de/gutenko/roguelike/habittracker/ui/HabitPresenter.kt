@@ -1,6 +1,7 @@
 package de.gutenko.roguelike.habittracker.ui
 
 import com.jakewharton.rxrelay2.PublishRelay
+import de.gutenko.roguelike.habittracker.androidLog
 import de.gutenko.roguelike.habittracker.data.habits.HabitCompletionRepository
 import de.gutenko.roguelike.habittracker.data.habits.HabitRepository
 import de.gutenko.roguelike.habittracker.data.habits.Optional
@@ -44,6 +45,7 @@ class HabitPresenter(
 
     fun viewStates(events: Observable<Event>): Observable<HabitsViewState> {
         val habitsLoaded = habitRepository.observeUserHabits(userId)
+            .androidLog("Habits")
             .map { it.sortedBy { it.createdTime } }
             .flatMap { habits ->
                 val completionsForToday = habits.map { habit ->
@@ -89,8 +91,12 @@ class HabitPresenter(
                 }
 
                 // Wait for all view states to come in before producing list
-                Observable.combineLatest(completionsForToday) { viewStates ->
-                    viewStates.map { it as HabitPresenter.HabitViewState }.toList()
+                if (completionsForToday.isNotEmpty()) {
+                    Observable.combineLatest(completionsForToday) { viewStates ->
+                        viewStates.map { it as HabitPresenter.HabitViewState }.toList()
+                    }
+                } else {
+                    Observable.just(emptyList())
                 }
             }.map<Result> { Result.Loaded(it) }
 

@@ -20,7 +20,6 @@ class FirebaseHabitRepository(private val firebaseDatabase: FirebaseDatabase) :
             .child(userId)
             .child("habits")
             .dataChanges()
-            .filter { it.exists() }
             .map {
                 it.children.map {
                     Habit(
