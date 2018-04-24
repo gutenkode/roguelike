@@ -74,7 +74,7 @@ class PlayerActivity : AppCompatActivity() {
                 BindingListAdapter.Builder<AttributeCardItemBinding, PlayerPresenter.AttributeViewState, Unit>()
                     .identical { first, second -> first.name == second.name }
                     .same { first, second -> first == second }
-                    .eventsFor { binding, i ->
+                    .eventsFor { binding ->
                         Observable.empty()
                     }
                     .ids { it.name.hashCode().toLong() }

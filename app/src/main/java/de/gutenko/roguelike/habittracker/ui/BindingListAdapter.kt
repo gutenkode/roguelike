@@ -20,7 +20,7 @@ class BindingListAdapter<T : ViewDataBinding, I, E>(
     @LayoutRes
     private val layoutId: Int,
     private val variable: Int,
-    private val eventsMapper: (T, Int) -> Observable<E>,
+    private val eventsMapper: (T) -> Observable<E>,
     private val itemIds: ((I) -> Long)?,
     itemCallback: DiffUtil.ItemCallback<I>
 ) : ListAdapter<I, BindingViewHolder<T>>(itemCallback) {
@@ -28,13 +28,13 @@ class BindingListAdapter<T : ViewDataBinding, I, E>(
         val inflater = LayoutInflater.from(parent.context)
         val binding = DataBindingUtil.inflate<T>(inflater, layoutId, parent, false)
 
+        eventsMapper(binding).subscribe(eventSubject)
+
         return BindingViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: BindingViewHolder<T>, position: Int) {
         holder.binding.setVariable(variable, getItem(position))
-
-        eventsMapper(holder.binding, position).subscribe(eventSubject)
     }
 
     override fun getItemId(position: Int): Long {
@@ -48,7 +48,7 @@ class BindingListAdapter<T : ViewDataBinding, I, E>(
         private lateinit var sameComparator: (I, I) -> Boolean
         private lateinit var contentComparator: (I, I) -> Boolean
         private var variable = 0
-        private lateinit var mapper: (T, Int) -> Observable<E>
+        private lateinit var mapper: (T) -> Observable<E>
         private var idMapper: ((I) -> Long)? = null
 
         fun identical(comparator: (I, I) -> Boolean): Builder<T, I, E> = apply {
@@ -67,7 +67,7 @@ class BindingListAdapter<T : ViewDataBinding, I, E>(
             this.idMapper = idMapper
         }
 
-        fun eventsFor(mapper: (T, Int) -> Observable<E>) = apply {
+        fun eventsFor(mapper: (T) -> Observable<E>) = apply {
             this.mapper = mapper
         }
 

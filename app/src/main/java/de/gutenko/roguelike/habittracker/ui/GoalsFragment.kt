@@ -96,12 +96,11 @@ class GoalsFragment : Fragment() {
         return BindingListAdapter.Builder<GoalListItemBinding, GoalsPresenter.GoalViewState, GoalsPresenter.Event>()
             .identical { first, second -> first.goalId == second.goalId }
             .same { first, second -> first == second }
-            .eventsFor { binding, i ->
-                val goal = binding.goal!!
-
+            .eventsFor { binding ->
                 binding.checkbox
                     .clicks()
                     .map {
+                        val goal = binding.goal!!
                         if (goal.completed)
                             Event.GoalMarkedUndone(goal.goalId)
                         else
@@ -109,11 +108,17 @@ class GoalsFragment : Fragment() {
                     }.mergeWith(
                         binding.root
                             .longClicks()
-                            .map { Event.GoalDeletePrompt(goal.goalId) }
+                            .map {
+                                val goal = binding.goal!!
+                                Event.GoalDeletePrompt(goal.goalId)
+                            }
                     ).mergeWith(
                         binding.root
                             .clicks()
-                            .map { Event.GoalSelected(goal.goalId) }
+                            .map {
+                                val goal = binding.goal!!
+                                Event.GoalSelected(goal.goalId)
+                            }
                     )
             }
             .ids { it.goalId.hashCode().toLong() }

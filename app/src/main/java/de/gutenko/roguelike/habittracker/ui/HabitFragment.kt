@@ -146,13 +146,12 @@ class HabitFragment : Fragment() {
             .same { firstHabit, secondHabit -> firstHabit == secondHabit }
             .identical { first, second -> first.habitId == second.habitId }
             .variable(BR.habit)
-            .eventsFor { binding, i ->
-                val habit = binding.habit!!
-
+            .eventsFor { binding ->
                 val doneUndone = binding
                     .checkbox
                     .clicks()
                     .map<HabitPresenter.Event> {
+                        val habit = binding.habit!!
                         when {
                             habit.habitDone -> Event.HabitUndone(habit.habitId)
                             !habit.habitDone -> Event.HabitDone(habit.habitId)
@@ -166,12 +165,14 @@ class HabitFragment : Fragment() {
                     .root
                     .longClicks()
                     .map<HabitPresenter.Event> {
+                        val habit = binding.habit!!
                         Event.HabitDeleteSelected(habit.habitId)
                     }
 
                 val selects = binding.root
                     .clicks()
                     .map {
+                        val habit = binding.habit!!
                         Event.HabitSelected(habit.habitId)
                     }
 
