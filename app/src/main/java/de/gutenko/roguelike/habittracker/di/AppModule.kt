@@ -8,6 +8,7 @@ import de.gutenko.roguelike.habittracker.data.goals.GoalRepository
 import de.gutenko.roguelike.habittracker.data.goals.MemoryGoalRepository
 import de.gutenko.roguelike.habittracker.data.habits.*
 import de.gutenko.roguelike.habittracker.ui.FirebasePlayerRepository
+import de.gutenko.roguelike.habittracker.ui.PlayerDataUseCase
 import de.gutenko.roguelike.habittracker.ui.PlayerRepository
 import javax.inject.Singleton
 
@@ -74,4 +75,13 @@ object FirebaseAppModule : AppModule {
     @Provides
     override fun playerRepository(): PlayerRepository =
         FirebasePlayerRepository(FirebaseDatabase.getInstance().reference.root.child("users"))
+
+    @Singleton
+    @Provides
+    fun playerDataUseCase(
+        habitCompletionRepository: HabitCompletionRepository,
+        habitRepository: HabitRepository,
+        goalRepository: GoalRepository
+    ): PlayerDataUseCase =
+        PlayerDataUseCase(habitCompletionRepository, habitRepository, goalRepository)
 }

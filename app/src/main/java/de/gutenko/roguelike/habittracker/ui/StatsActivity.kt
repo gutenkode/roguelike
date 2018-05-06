@@ -26,6 +26,7 @@ import de.gutenko.roguelike.R
 import de.gutenko.roguelike.habittracker.data.habits.Habit
 import de.gutenko.roguelike.habittracker.data.habits.HabitCompletionRepository
 import de.gutenko.roguelike.habittracker.data.habits.HabitRepository
+import de.gutenko.roguelike.habittracker.data.player.GamePlayer
 import de.gutenko.roguelike.habittracker.notifications.HabitNotificationBroadcastReceiver
 import de.gutenko.roguelike.loop.MainActivity
 import kotlinx.android.synthetic.main.activity_stats.*
@@ -58,6 +59,9 @@ class StatsActivity : AppCompatActivity() {
 
     @Inject
     lateinit var playerRepository: PlayerRepository
+
+    @Inject
+    lateinit var playerDataUseCase: PlayerDataUseCase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         AndroidInjection.inject(this)
@@ -199,10 +203,19 @@ class StatsActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.resume_game -> {
-                playerRepository.observePlayer(userId)
+                playerDataUseCase.playerData(userId)
                     .take(1)
                     .subscribe {
-                        startActivity(Intent(this, MainActivity::class.java))
+                        val intent = MainActivity.launchIntent(
+                            GamePlayer(
+                                it.attackUpdate,
+                                it.agilityUpdate,
+                                it.enduranceUpdate,
+                                it.intelligenceUpdate
+                            )
+                        )
+
+                        startActivity(intent)
                     }
 
 
