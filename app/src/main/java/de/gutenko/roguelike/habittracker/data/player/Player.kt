@@ -9,6 +9,13 @@ data class Player(
     val userName: String
 ) : Serializable
 
+data class GamePlayer(
+    val attack: Int,
+    val agility: Int,
+    val endurance: Int,
+    val intelligence: Int
+) : Serializable
+
 fun DataSnapshot.toPlayer(): Player = Player(
     valueExpected("userId"),
     valueExpected("userName")

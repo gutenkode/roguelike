@@ -1,5 +1,6 @@
 package de.gutenko.roguelike.loop;
 
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Resources;
 import android.os.Bundle;
@@ -20,15 +21,26 @@ import de.gutenko.motes.render.mesh.FontUtils;
 import de.gutenko.roguelike.R;
 import de.gutenko.roguelike.data.Const;
 import de.gutenko.roguelike.data.Input;
+import de.gutenko.roguelike.habittracker.data.player.GamePlayer;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnTouchListener {
+    public static final String GAME_PLAYER_KEY = "GAME_PLAYER";
     private Surface surface;
     private GameLoop gameLoop;
+    private GamePlayer gamePlayer;
+
+    public static Intent launchIntent(GamePlayer gamePlayer) {
+        Intent intent = new Intent();
+        intent.putExtra(GAME_PLAYER_KEY, gamePlayer);
+
+        return intent;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        gamePlayer = (GamePlayer) getIntent().getSerializableExtra(GAME_PLAYER_KEY);
 
         loadResources();
 
@@ -49,6 +61,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 
         this.setContentView(surface);
     }
+
     private void loadResources() {
         Resources res = getResources();
 
@@ -82,6 +95,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         Texture.loadFile(this.getApplicationContext(), R.drawable.misterpixel, Const.TEX_FONT);
         Texture.loadFile(this.getApplicationContext(), R.drawable.healthbar, Const.TEX_HEALTHBAR);
     }
+
     private String loadShader(Resources res, int resHandle) throws IOException {
         InputStream inputStream = res.openRawResource(resHandle);
 
@@ -117,21 +131,21 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         int action = event.getActionMasked();
         int index = event.getActionIndex();
 
-        switch(action) {
+        switch (action) {
             case (MotionEvent.ACTION_DOWN):
             case (MotionEvent.ACTION_POINTER_DOWN):
-                Input.touchEventDown(event.getX(),event.getY(),event.getActionIndex());
+                Input.touchEventDown(event.getX(), event.getY(), event.getActionIndex());
                 return true;
             case (MotionEvent.ACTION_MOVE):
-                Input.touchEventMove(event.getX(),event.getY(),event.getActionIndex());
+                Input.touchEventMove(event.getX(), event.getY(), event.getActionIndex());
                 return true;
             case (MotionEvent.ACTION_UP):
             case (MotionEvent.ACTION_POINTER_UP):
             case (MotionEvent.ACTION_CANCEL):
             case (MotionEvent.ACTION_OUTSIDE):
-                Input.touchEventUp(event.getX(),event.getY(),event.getActionIndex());
+                Input.touchEventUp(event.getX(), event.getY(), event.getActionIndex());
                 return true;
-            default :
+            default:
                 return super.onTouchEvent(event);
         }
     }
