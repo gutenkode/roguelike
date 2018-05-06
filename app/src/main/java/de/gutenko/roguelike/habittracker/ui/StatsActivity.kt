@@ -15,6 +15,7 @@ import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
+import com.google.firebase.auth.FirebaseAuth
 import dagger.Binds
 import dagger.Module
 import dagger.Subcomponent
@@ -134,6 +135,11 @@ class StatsActivity : AppCompatActivity() {
             when (it.itemId) {
                 R.id.character -> {
                     startActivity(PlayerActivity.launchIntent(this, userId))
+                    true
+                }
+
+                R.id.log_out -> {
+                    FirebaseAuth.getInstance().signOut()
                     true
                 }
 
