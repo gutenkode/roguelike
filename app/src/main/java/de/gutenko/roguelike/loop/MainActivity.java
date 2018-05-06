@@ -44,7 +44,6 @@ public class MainActivity extends Activity implements View.OnTouchListener {
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         // prevent rotation
-        //setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT);
 
         this.setContentView(surface);
@@ -81,6 +80,7 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         Texture.loadFile(this.getApplicationContext(), R.drawable.player, Const.TEX_PLAYER);
         Texture.loadFile(this.getApplicationContext(), R.drawable.misterpixel, Const.TEX_FONT);
         Texture.loadFile(this.getApplicationContext(), R.drawable.healthbar, Const.TEX_HEALTHBAR);
+        Texture.loadFile(this.getApplicationContext(), R.drawable.map, Const.TEX_MAP);
     }
     private String loadShader(Resources res, int resHandle) throws IOException {
         InputStream inputStream = res.openRawResource(resHandle);

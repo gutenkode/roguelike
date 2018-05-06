@@ -5,8 +5,10 @@ import android.opengl.Matrix;
 import android.util.Pair;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import de.gutenko.motes.render.MVPMatrix;
 import de.gutenko.motes.render.Shader;
@@ -18,10 +20,12 @@ import de.gutenko.roguelike.data.Const;
 import de.gutenko.roguelike.data.Input;
 import de.gutenko.roguelike.data.map.MapBuilder;
 import de.gutenko.roguelike.data.map.MapDefinition;
+import de.gutenko.roguelike.data.map.Minimap;
 import de.gutenko.roguelike.entities.Enemy;
 import de.gutenko.roguelike.entities.Entity;
 import de.gutenko.roguelike.entities.PlayerEntity;
 import de.gutenko.roguelike.entities.TileSprite;
+import de.gutenko.roguelike.habittracker.data.player.Player;
 
 /**
  * Created by Peter on 2/1/18.
@@ -42,21 +46,25 @@ public class DungeonScene implements Scene {
         return instance;
     }
 
-    private int currentFloor;
+
+    private int currentFloor, mapX, mapY, scrollX, scrollY;
+    private double scrollDelay;
     private float aspectRatio, mapScale, logOffset, logAutoClearDelay = 90;
     private boolean[][] solid;
     private int[][] tiles;
     private MVPMatrix matrix;
-    List<TileSprite> tileSprites;
+    private Map<Integer, MapDefinition> dungeonRooms;
+    private List<TileSprite> tileSprites;
     private List<Enemy> enemies, queuedActionEnemies;
     private List<Pair<Entity,Entity.TurnAction>> queuedActions;
     private List<TexMesh> logList;
     private int maxLogLength = 4;
     private PlayerEntity player;
-    private boolean isPlayerTurn = true, isPlayingAnimations = false, isProcessingActions = true;
+    private boolean isPlayerTurn = true, isPlayingAnimations = false, isProcessingActions = true, roomTransitioned = false;
 
     private DungeonScene() {
         matrix = new MVPMatrix();
+        dungeonRooms = new HashMap<>();
         logList = new ArrayList<>();
         enemies = new ArrayList<>();
         queuedActionEnemies = new ArrayList<>();
@@ -67,38 +75,53 @@ public class DungeonScene implements Scene {
     }
     public void loadNextFloor() {
         currentFloor++;
+        dungeonRooms.clear();
 
-        enemies.clear();
+        Minimap.reset(64,64);
+        loadMap(64,64);
+        player = PlayerEntity.moveInstanceTo(1,1);
+        //player = PlayerEntity.getInstance();
+
+        log("Welcome to Floor "+currentFloor+".");
+    }
+    private void loadMap(int x, int y) {
+        mapX = x;
+        mapY = y;
+        int key = mapKey(x,y);
+        //int key = ((x << 16) & 0xFF00)+(y & 0x00FF);
+        MapDefinition map;
+        if (dungeonRooms.containsKey(key)) {
+            map = dungeonRooms.get(key);
+        } else {
+            map = MapBuilder.createMap(8,12, currentFloor);
+            dungeonRooms.put(key,map);
+            Minimap.addRoom(mapX,mapY);
+        }
+        Minimap.setCurrentRoom(mapX,mapY);
+
+        //enemies.clear();
         queuedActionEnemies.clear();
         queuedActions.clear();
 
-        MapDefinition map = MapBuilder.createMap(8,12, currentFloor);
         solid = map.solid;
         tiles = map.tiles;
-        player = map.player;
         enemies = map.enemies;
         tileSprites = map.tileSprites;
-        mapScale = tiles.length; // number of rows that fit on the screen
 
-        log("Welcome to Floor "+currentFloor+".");
+        mapScale = tiles.length; // number of rows that fit on the screen
     }
 
     @Override
     public void onDrawFrame() {
         Shader.use(Const.SHADER_SPRITE);
-        Texture.bindUnfiltered(Const.TEX_TILESET);
-        resetMatrix();
 
         // render ground tiles
-        for (int[] i : tiles) {
-            for (int i2 = 0; i2 < i.length; i2++) {
-                Shader.setMatrix(matrix);
-                Shader.setUniformFloat("spriteInfo",8,8, i[i2]);
-                quadMesh.render();
-                Matrix.translateM(matrix.viewMatrix, 0, 0, 1, 0);
-            }
-            Matrix.translateM(matrix.viewMatrix,0, 1,-i.length,0);
-        }
+        Texture.bindUnfiltered(Const.TEX_TILESET);
+        renderTiles(tiles, 0,0);
+        if (scrollX != 0)
+            renderTiles(dungeonRooms.get(mapKey(mapX-(int)Math.signum(scrollX),mapY)).tiles, -tiles.length*(int)Math.signum(scrollX),0);
+        else if (scrollY != 0)
+            renderTiles(dungeonRooms.get(mapKey(mapX,mapY-(int)Math.signum(scrollY))).tiles, 0, -tiles[0].length*(int)Math.signum(scrollY));
 
         // render tile sprites
         for (TileSprite t : tileSprites) {
@@ -114,6 +137,7 @@ public class DungeonScene implements Scene {
         }
         resetMatrix();
         player.renderStep();
+        Matrix.translateM(matrix.viewMatrix,0,-scrollX/2f/tiles.length,-scrollY/2f/tiles[0].length,0);
         player.render(matrix);
 
         for (Enemy e : enemies) {
@@ -121,7 +145,12 @@ public class DungeonScene implements Scene {
             e.renderHealthBar(matrix);
         }
         resetMatrix();
+        Matrix.translateM(matrix.viewMatrix,0,-scrollX/2f/tiles.length,-scrollY/2f/tiles[0].length,0);
         player.renderHealthBar(matrix);
+
+        ///////////////////////////////
+        // UI STUFF HERE
+        ///////////////////////////////
 
         // render log text
         if (logOffset > 0)
@@ -134,7 +163,7 @@ public class DungeonScene implements Scene {
             logAutoClearDelay--;
         Shader.use(Const.SHADER_TEXTURE);
         Texture.bindUnfiltered(Const.TEX_FONT);
-        resetMatrix();
+        resetMatrixNoScroll();
         Matrix.translateM(matrix.viewMatrix,0, .33f,logOffset+.15f+ tiles[0].length,0);
         for (TexMesh m : logList) {
             Shader.setMatrix(matrix);
@@ -142,14 +171,44 @@ public class DungeonScene implements Scene {
             Matrix.translateM(matrix.viewMatrix,0, 0,.5f,0);
         }
 
+        // render minimap
+        Shader.use(Const.SHADER_SPRITE);
+        resetMatrixNoScroll();
+        Matrix.translateM(matrix.viewMatrix,0, tiles.length-1.5f,tiles[0].length+1.25f,0);
+        Minimap.render(matrix);
+
         // game logic update
         update();
+    }
+    private void renderTiles(int[][] tiles, int xOffset, int yOffset) {
+        resetMatrix();
+        Matrix.translateM(matrix.viewMatrix,0,xOffset,yOffset,0);
+        for (int[] i : tiles) {
+            for (int i2 = 0; i2 < i.length; i2++) {
+                Shader.setMatrix(matrix);
+                Shader.setUniformFloat("spriteInfo",8,8, i[i2]);
+                quadMesh.render();
+                Matrix.translateM(matrix.viewMatrix, 0, 0, 1, 0);
+            }
+            Matrix.translateM(matrix.viewMatrix,0, 1,-i.length,0);
+        }
     }
 
     private void update() {
         isPlayingAnimations = player.isAnimating();
         for (Enemy e : enemies)
             isPlayingAnimations = isPlayingAnimations || e.isAnimating();
+        if (scrollX != 0 || scrollY != 0) {
+            isPlayingAnimations = true;
+            if (scrollDelay <= 0) {
+                if (scrollX != 0)
+                    scrollX -= Math.signum(scrollX);
+                if (scrollY != 0)
+                    scrollY -= Math.signum(scrollY);
+                scrollDelay = .01;
+            } else
+                scrollDelay -= 1/60.0; // hardcoded delta time of 60fps
+        }
 
         if (!isPlayingAnimations)
         {
@@ -190,6 +249,32 @@ public class DungeonScene implements Scene {
                     if (t.X == player.tileX && t.Y == player.tileY)
                         t.onPlayerEnter();
                 }
+                // room transition
+                if (player.tileX == 0 || player.tileY == 0 || player.tileX == tiles.length-1 || player.tileY == tiles[0].length-1) {
+                    if (!roomTransitioned) {
+                        roomTransitioned = true;
+                        if (player.tileX == 0 || player.tileX == tiles.length-1) {
+                            if (player.tileX == 0) {
+                                loadMap(mapX-1, mapY);
+                                scrollX = 2*-tiles.length;
+                            } else {
+                                loadMap(mapX + 1, mapY);
+                                scrollX = 2*tiles.length;
+                            }
+                            player.teleportTo(tiles.length - 1 - player.tileX, player.tileY);
+                        } else {
+                            if (player.tileY == 0) {
+                                loadMap(mapX, mapY-1);
+                                scrollY = 2*-tiles[0].length;
+                            } else {
+                                loadMap(mapX, mapY+1);
+                                scrollY = 2*tiles[0].length;
+                            }
+                            player.teleportTo(player.tileX, tiles[0].length - 1 - player.tileY);
+                        }
+                    }
+                } else
+                    roomTransitioned = false;
             }
         }
 
@@ -228,6 +313,10 @@ public class DungeonScene implements Scene {
     }
 
     private void resetMatrix() {
+        resetMatrixNoScroll();
+        Matrix.translateM(matrix.viewMatrix,0,scrollX/2f,scrollY/2f,0);
+    }
+    private void resetMatrixNoScroll() {
         Matrix.setIdentityM(matrix.viewMatrix,0);
         Matrix.scaleM(matrix.viewMatrix,0, 1,-1,0);
         Matrix.translateM(matrix.viewMatrix,0, 0,-1,0);
@@ -279,5 +368,9 @@ public class DungeonScene implements Scene {
             logList.remove(0);
             logOffset += .5f;
         }
+    }
+
+    private int mapKey(int x, int y) {
+        return (x << 16)+(y & 0xFF);
     }
 }

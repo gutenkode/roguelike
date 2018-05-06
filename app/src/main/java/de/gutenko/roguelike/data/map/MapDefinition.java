@@ -11,14 +11,12 @@ public class MapDefinition {
     public int[][] tiles;
     public List<Enemy> enemies;
     public List<TileSprite> tileSprites;
-    public PlayerEntity player;
 
-    public MapDefinition(boolean[][] s, int[][] t, List<Enemy> e, List<TileSprite> ts, PlayerEntity p) {
+    public MapDefinition(boolean[][] s, int[][] t, List<Enemy> e, List<TileSprite> ts) {
         solid = s;
         tiles = t;
         enemies = e;
         tileSprites = ts;
-        player = p;
     }
 
 }

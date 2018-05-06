@@ -148,6 +148,12 @@ public abstract class Entity {
             tileY += moveValue[1];
         }
     }
+    public void teleportTo(int x, int y) {
+        renderX = tileX = x;
+        renderY = tileY = y;
+        moveValue[0] = 0;
+        moveValue[1] = 0;
+    }
 
     public void attack() {
         int dmg = (int)calculateDamage(atk,atk,targetEntity.def);

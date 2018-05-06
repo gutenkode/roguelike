@@ -2,6 +2,7 @@ package de.gutenko.roguelike.entities;
 
 import de.gutenko.roguelike.data.Const;
 import de.gutenko.roguelike.data.Input;
+import de.gutenko.roguelike.habittracker.data.player.Player;
 import de.gutenko.roguelike.loop.GameLoop;
 import de.gutenko.roguelike.scenes.DungeonScene;
 
@@ -21,6 +22,13 @@ public class PlayerEntity extends Entity {
         if (instance == null)
             instance = new PlayerEntity();
         instance.moveTo(x,y);
+        return instance;
+    }
+    public static PlayerEntity getInstance() {
+        if (instance == null) {
+            instance = new PlayerEntity();
+            instance.moveTo(1, 1);
+        }
         return instance;
     }
 
@@ -43,6 +51,12 @@ public class PlayerEntity extends Entity {
     private void moveTo(int x, int y) {
         renderX = targetX = tileX = x;
         renderY = targetY = tileY = y;
+    }
+    @Override
+    public void teleportTo(int x, int y) {
+        super.teleportTo(x,y);
+        targetX = x;
+        targetY = y;
     }
 
     @Override

@@ -13,7 +13,8 @@ public class Const {
             TEX_RAT = "rat",
             TEX_PLAYER = "player",
             TEX_FONT = "font",
-            TEX_HEALTHBAR = "healthbar";
+            TEX_HEALTHBAR = "healthbar",
+            TEX_MAP = "map";
 
     // shader enums
     public static final String
