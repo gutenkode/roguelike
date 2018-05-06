@@ -1,9 +1,9 @@
 package de.gutenko.roguelike.loop;
 
-import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
@@ -22,7 +22,7 @@ import de.gutenko.roguelike.data.Const;
 import de.gutenko.roguelike.data.Input;
 
 
-public class MainActivity extends Activity implements View.OnTouchListener {
+public class MainActivity extends AppCompatActivity implements View.OnTouchListener {
     private Surface surface;
     private GameLoop gameLoop;
 
