@@ -81,6 +81,7 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         Texture.loadFile(this.getApplicationContext(), R.drawable.misterpixel, Const.TEX_FONT);
         Texture.loadFile(this.getApplicationContext(), R.drawable.healthbar, Const.TEX_HEALTHBAR);
         Texture.loadFile(this.getApplicationContext(), R.drawable.map, Const.TEX_MAP);
+        Texture.loadFile(this.getApplicationContext(), R.drawable.statusbar, Const.TEX_STATUSBAR);
     }
     private String loadShader(Resources res, int resHandle) throws IOException {
         InputStream inputStream = res.openRawResource(resHandle);

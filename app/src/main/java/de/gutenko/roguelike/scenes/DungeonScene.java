@@ -152,6 +152,17 @@ public class DungeonScene implements Scene {
         // UI STUFF HERE
         ///////////////////////////////
 
+        // background texture for status bar
+        Shader.use(Const.SHADER_TEXTURE);
+        Texture.bindUnfiltered(Const.TEX_STATUSBAR);
+        resetMatrixNoScroll();
+        Matrix.translateM(matrix.viewMatrix,0,0,tiles[0].length,0);
+        float totalHeight = (1/aspectRatio)*mapScale;
+        float statusbarHeight = totalHeight-tiles[0].length;
+        Matrix.scaleM(matrix.viewMatrix,0,mapScale,statusbarHeight,1);
+        Shader.setMatrix(matrix);
+        quadMesh.render();
+
         // render log text
         if (logOffset > 0)
             logOffset -= .1;
@@ -161,7 +172,6 @@ public class DungeonScene implements Scene {
             clearTopLogEntry();
         else
             logAutoClearDelay--;
-        Shader.use(Const.SHADER_TEXTURE);
         Texture.bindUnfiltered(Const.TEX_FONT);
         resetMatrixNoScroll();
         Matrix.translateM(matrix.viewMatrix,0, .33f,logOffset+.15f+ tiles[0].length,0);
@@ -318,7 +328,7 @@ public class DungeonScene implements Scene {
     }
     private void resetMatrixNoScroll() {
         Matrix.setIdentityM(matrix.viewMatrix,0);
-        Matrix.scaleM(matrix.viewMatrix,0, 1,-1,0);
+        Matrix.scaleM(matrix.viewMatrix,0, 1,-1,1);
         Matrix.translateM(matrix.viewMatrix,0, 0,-1,0);
         float scale = 1f/mapScale;//1f/mapScale*2
         Matrix.scaleM(matrix.viewMatrix,0, scale,scale,1);
@@ -327,8 +337,9 @@ public class DungeonScene implements Scene {
     @Override
     public void onSurfaceChanged(int width, int height) {
         aspectRatio = (float) width / height;
+        float bottomScale = ((float)height/width)-1;
 
-        Matrix.orthoM(matrix.projectionMatrix, 0, 0, aspectRatio*2, -1, 1, -1, 1);
+        Matrix.orthoM(matrix.projectionMatrix, 0, 0, 1, -bottomScale, 1, -1, 1);
         //Matrix.orthoM(matrix.projectionMatrix, 0, -ar, ar, -1, 1, -1, 1);
     }
     public float getAspectRatio() { return aspectRatio; }
