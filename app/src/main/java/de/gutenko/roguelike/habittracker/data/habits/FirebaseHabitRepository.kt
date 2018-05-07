@@ -6,7 +6,9 @@ import com.androidhuman.rxfirebase2.database.rxRemoveValue
 import com.androidhuman.rxfirebase2.database.rxSetValue
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.FirebaseDatabase
+import de.gutenko.roguelike.habittracker.androidLog
 import de.gutenko.roguelike.habittracker.data.player.toPlayerUpdate
+import de.gutenko.roguelike.habittracker.onErrorComplete
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -20,6 +22,8 @@ class FirebaseHabitRepository(private val firebaseDatabase: FirebaseDatabase) :
             .child(userId)
             .child("habits")
             .dataChanges()
+            .onErrorComplete()
+            .androidLog("Habits")
             .map {
                 it.children.map {
                     Habit(

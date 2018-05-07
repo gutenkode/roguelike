@@ -15,6 +15,7 @@ import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
+import com.firebase.ui.auth.AuthUI
 import dagger.Binds
 import dagger.Module
 import dagger.Subcomponent
@@ -26,6 +27,7 @@ import de.gutenko.roguelike.R
 import de.gutenko.roguelike.habittracker.data.habits.Habit
 import de.gutenko.roguelike.habittracker.data.habits.HabitCompletionRepository
 import de.gutenko.roguelike.habittracker.data.habits.HabitRepository
+import de.gutenko.roguelike.habittracker.data.player.GamePlayer
 import de.gutenko.roguelike.habittracker.notifications.HabitNotificationBroadcastReceiver
 import de.gutenko.roguelike.loop.MainActivity
 import kotlinx.android.synthetic.main.activity_stats.*
@@ -58,6 +60,9 @@ class StatsActivity : AppCompatActivity() {
 
     @Inject
     lateinit var playerRepository: PlayerRepository
+
+    @Inject
+    lateinit var playerDataUseCase: PlayerDataUseCase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         AndroidInjection.inject(this)
@@ -133,6 +138,17 @@ class StatsActivity : AppCompatActivity() {
                     true
                 }
 
+                R.id.log_out -> {
+                    AuthUI.getInstance()
+                        .signOut(this)
+                        .addOnCompleteListener {
+                            startActivity(Intent(this, SignInActivity::class.java))
+                            finish()
+                        }
+
+                    true
+                }
+
                 else -> false
             }
         }
@@ -199,10 +215,19 @@ class StatsActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.resume_game -> {
-                playerRepository.observePlayer(userId)
+                playerDataUseCase.playerData(userId)
                     .take(1)
                     .subscribe {
-                        startActivity(Intent(this, MainActivity::class.java))
+                        val intent = MainActivity.launchIntent(
+                            GamePlayer(
+                                it.attackUpdate,
+                                it.agilityUpdate,
+                                it.enduranceUpdate,
+                                it.intelligenceUpdate
+                            )
+                        )
+
+                        startActivity(intent)
                     }
 
 
@@ -242,7 +267,7 @@ class StatsActivity : AppCompatActivity() {
     class StatsPagerAdapter(fragmentManager: FragmentManager, private val userId: String) :
         FragmentPagerAdapter(fragmentManager) {
 
-        private val titles = listOf("Habits", "Goals", "Map", "Inventory")
+        private val titles = listOf("Habits", "Goals", "Inventory")
 
         override fun getPageTitle(position: Int): String {
             return titles[position]
@@ -253,12 +278,11 @@ class StatsActivity : AppCompatActivity() {
                 0 -> HabitFragment.newInstance(userId)
                 1 -> GoalsFragment.newInstance(userId)
                 2 -> GoalsFragment.newInstance(userId)
-                3 -> HabitFragment.newInstance(userId)
                 else -> throw IllegalStateException("Attempted to navigate too far")
             }
         }
 
-        override fun getCount(): Int = 4
+        override fun getCount(): Int = 3
     }
 
     companion object {

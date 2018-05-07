@@ -29,3 +29,5 @@ fun <T> Observable<T>.changes(): Observable<Changed<T>> {
         }).filter { it.leastRecent != null && it.mostRecent != null }
         .map { Changed(it.leastRecent!!, it.mostRecent!!) }
 }
+
+fun <T> Observable<T>.onErrorComplete() = onErrorResumeNext(Observable.empty())

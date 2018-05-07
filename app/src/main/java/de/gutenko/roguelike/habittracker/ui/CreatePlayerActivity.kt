@@ -46,7 +46,7 @@ class CreatePlayerActivity : AppCompatActivity() {
         userId = intent.getStringExtra(userIdKey)
 
         submitButton.setOnClickListener {
-            playerRepository.addPlayer(Player(userId, playerName.text.toString(), 0, 0, 0, 0))
+            playerRepository.addPlayer(Player(userId, playerName.text.toString()))
                 .subscribe {
                     startActivity(StatsActivity.launchIntent(this, userId, null))
                 }

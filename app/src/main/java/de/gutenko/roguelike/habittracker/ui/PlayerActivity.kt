@@ -19,6 +19,9 @@ import de.gutenko.roguelike.BR
 import de.gutenko.roguelike.R
 import de.gutenko.roguelike.databinding.AttributeCardItemBinding
 import de.gutenko.roguelike.habittracker.androidLog
+import de.gutenko.roguelike.habittracker.data.goals.GoalRepository
+import de.gutenko.roguelike.habittracker.data.habits.HabitCompletionRepository
+import de.gutenko.roguelike.habittracker.data.habits.HabitRepository
 import de.gutenko.roguelike.habittracker.ui.PlayerPresenter.AttributeViewState
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -44,6 +47,12 @@ abstract class PlayerActivityModule {
 class PlayerActivity : AppCompatActivity() {
     @Inject
     lateinit var playerRepository: PlayerRepository
+    @Inject
+    lateinit var habitRepository: HabitRepository
+    @Inject
+    lateinit var habitCompletionRepository: HabitCompletionRepository
+    @Inject
+    lateinit var goalRepository: GoalRepository
 
     private lateinit var userId: String
     private lateinit var presenter: PlayerPresenter
@@ -63,6 +72,7 @@ class PlayerActivity : AppCompatActivity() {
         presenter =
                 PlayerPresenter(
                     playerRepository,
+                    PlayerDataUseCase(habitCompletionRepository, habitRepository, goalRepository),
                     userId
                 )
 

@@ -1,9 +1,10 @@
 package de.gutenko.roguelike.loop;
 
-import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
@@ -20,15 +21,26 @@ import de.gutenko.motes.render.mesh.FontUtils;
 import de.gutenko.roguelike.R;
 import de.gutenko.roguelike.data.Const;
 import de.gutenko.roguelike.data.Input;
+import de.gutenko.roguelike.habittracker.data.player.GamePlayer;
 
 
-public class MainActivity extends Activity implements View.OnTouchListener {
+public class MainActivity extends AppCompatActivity implements View.OnTouchListener {
+    public static final String GAME_PLAYER_KEY = "GAME_PLAYER";
     private Surface surface;
     private GameLoop gameLoop;
+    private GamePlayer gamePlayer;
+
+    public static Intent launchIntent(GamePlayer gamePlayer) {
+        Intent intent = new Intent();
+        intent.putExtra(GAME_PLAYER_KEY, gamePlayer);
+
+        return intent;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        gamePlayer = (GamePlayer) getIntent().getSerializableExtra(GAME_PLAYER_KEY);
 
         loadResources();
 
@@ -48,6 +60,7 @@ public class MainActivity extends Activity implements View.OnTouchListener {
 
         this.setContentView(surface);
     }
+
     private void loadResources() {
         Resources res = getResources();
 
@@ -83,6 +96,7 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         Texture.loadFile(this.getApplicationContext(), R.drawable.map, Const.TEX_MAP);
         Texture.loadFile(this.getApplicationContext(), R.drawable.statusbar, Const.TEX_STATUSBAR);
     }
+
     private String loadShader(Resources res, int resHandle) throws IOException {
         InputStream inputStream = res.openRawResource(resHandle);
 
@@ -118,21 +132,21 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         int action = event.getActionMasked();
         int index = event.getActionIndex();
 
-        switch(action) {
+        switch (action) {
             case (MotionEvent.ACTION_DOWN):
             case (MotionEvent.ACTION_POINTER_DOWN):
-                Input.touchEventDown(event.getX(),event.getY(),event.getActionIndex());
+                Input.touchEventDown(event.getX(), event.getY(), event.getActionIndex());
                 return true;
             case (MotionEvent.ACTION_MOVE):
-                Input.touchEventMove(event.getX(),event.getY(),event.getActionIndex());
+                Input.touchEventMove(event.getX(), event.getY(), event.getActionIndex());
                 return true;
             case (MotionEvent.ACTION_UP):
             case (MotionEvent.ACTION_POINTER_UP):
             case (MotionEvent.ACTION_CANCEL):
             case (MotionEvent.ACTION_OUTSIDE):
-                Input.touchEventUp(event.getX(),event.getY(),event.getActionIndex());
+                Input.touchEventUp(event.getX(), event.getY(), event.getActionIndex());
                 return true;
-            default :
+            default:
                 return super.onTouchEvent(event);
         }
     }

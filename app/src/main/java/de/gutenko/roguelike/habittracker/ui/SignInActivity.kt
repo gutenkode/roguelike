@@ -19,6 +19,10 @@ class SignInActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sign_in)
+    }
+
+    override fun onStart() {
+        super.onStart()
 
         val firebaseAuth = FirebaseAuth.getInstance()
         val currentUser = firebaseAuth.currentUser
@@ -39,7 +43,7 @@ class SignInActivity : AppCompatActivity() {
                     .setAvailableProviders(options)
                     .build()
 
-            startActivityForResult(intent, 0)
+            startActivityForResult(intent, FIREBASE_LOGIN_UI.requestCode)
         } else {
             startActivity(MenuActivity.launchIntent(this, currentUser.uid))
             finish()
@@ -58,6 +62,8 @@ class SignInActivity : AppCompatActivity() {
                             FirebaseAuth.getInstance().currentUser!!.uid
                         )
                     )
+
+                    finish()
                 }
             }
         }
