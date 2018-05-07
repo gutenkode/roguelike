@@ -3,10 +3,12 @@ package de.gutenko.roguelike.habittracker.data.goals
 import com.androidhuman.rxfirebase2.database.*
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseReference
+import de.gutenko.roguelike.habittracker.androidLog
 import de.gutenko.roguelike.habittracker.data.habits.valueExpected
 import de.gutenko.roguelike.habittracker.data.habits.valueFor
 import de.gutenko.roguelike.habittracker.data.player.PlayerUpdate
 import de.gutenko.roguelike.habittracker.data.player.toPlayerUpdate
+import de.gutenko.roguelike.habittracker.onErrorComplete
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -19,6 +21,8 @@ class FirebaseGoalRepository(private val users: DatabaseReference) : GoalReposit
             .child(userId)
             .child("goals")
             .dataChanges()
+            .onErrorComplete()
+            .androidLog("Goals")
             .map { it.children.map { it.toGoal() } }
             .map { it.toSet() }
 

@@ -5,6 +5,8 @@ import com.androidhuman.rxfirebase2.database.rxRemoveValue
 import com.androidhuman.rxfirebase2.database.rxSetValue
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseReference
+import de.gutenko.roguelike.habittracker.androidLog
+import de.gutenko.roguelike.habittracker.onErrorComplete
 import io.reactivex.Completable
 import io.reactivex.Observable
 import org.joda.time.LocalDate
@@ -22,6 +24,8 @@ class FirebaseHabitCompletionRepository(private val users: DatabaseReference) :
             .child(habitId)
             .child(localDate.toString())
             .dataChanges()
+            .onErrorComplete()
+            .androidLog("Completions")
             .map {
                 when {
                     it.exists() -> Optional.Some(it.toCompletion())
@@ -53,6 +57,9 @@ class FirebaseHabitCompletionRepository(private val users: DatabaseReference) :
             .child(userId)
             .child(habitId)
             .dataChanges()
+            .onErrorComplete()
+            .androidLog("PCompletions")
+            .retry(0)
             .map {
                 it.children.map { it.toCompletion() }
             }

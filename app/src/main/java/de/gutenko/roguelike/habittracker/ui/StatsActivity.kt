@@ -13,9 +13,10 @@ import android.support.v4.app.FragmentPagerAdapter
 import android.support.v4.view.GravityCompat
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import com.google.firebase.auth.FirebaseAuth
+import com.firebase.ui.auth.AuthUI
 import dagger.Binds
 import dagger.Module
 import dagger.Subcomponent
@@ -30,7 +31,6 @@ import de.gutenko.roguelike.habittracker.data.habits.HabitRepository
 import de.gutenko.roguelike.habittracker.data.player.GamePlayer
 import de.gutenko.roguelike.habittracker.notifications.HabitNotificationBroadcastReceiver
 import de.gutenko.roguelike.loop.MainActivity
-import kotlinx.android.synthetic.main.activity_stats.*
 import org.joda.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -96,6 +96,12 @@ class StatsActivity : AppCompatActivity() {
             userId
         )
 
+        Thread.currentThread().uncaughtExceptionHandler =
+                Thread.UncaughtExceptionHandler { _, e ->
+                    e.printStackTrace()
+                    Log.d("StatsActivity", e.toString())
+                }
+
         toolbar.inflateMenu(R.menu.stats_menu)
 
         tabLayout.setupWithViewPager(pager)
@@ -139,7 +145,13 @@ class StatsActivity : AppCompatActivity() {
                 }
 
                 R.id.log_out -> {
-                    FirebaseAuth.getInstance().signOut()
+                    AuthUI.getInstance()
+                        .signOut(this)
+                        .addOnCompleteListener {
+                            startActivity(Intent(this, SignInActivity::class.java))
+                            finish()
+                        }
+
                     true
                 }
 
@@ -261,7 +273,7 @@ class StatsActivity : AppCompatActivity() {
     class StatsPagerAdapter(fragmentManager: FragmentManager, private val userId: String) :
         FragmentPagerAdapter(fragmentManager) {
 
-        private val titles = listOf("Habits", "Goals", "Map", "Inventory")
+        private val titles = listOf("Habits", "Goals", "Inventory")
 
         override fun getPageTitle(position: Int): String {
             return titles[position]
@@ -272,12 +284,11 @@ class StatsActivity : AppCompatActivity() {
                 0 -> HabitFragment.newInstance(userId)
                 1 -> GoalsFragment.newInstance(userId)
                 2 -> GoalsFragment.newInstance(userId)
-                3 -> HabitFragment.newInstance(userId)
                 else -> throw IllegalStateException("Attempted to navigate too far")
             }
         }
 
-        override fun getCount(): Int = 4
+        override fun getCount(): Int = 3
     }
 
     companion object {

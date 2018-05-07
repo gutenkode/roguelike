@@ -28,7 +28,9 @@ class FirebasePlayerRepository(private val users: DatabaseReference) : PlayerRep
         users
             .child(userId)
             .child("player")
-            .dataChanges().map {
+            .dataChanges()
+            .retry(0)
+            .map {
                 it.toPlayer()
             }
 
