@@ -13,7 +13,6 @@ import android.support.v4.app.FragmentPagerAdapter
 import android.support.v4.view.GravityCompat
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import com.firebase.ui.auth.AuthUI
@@ -31,6 +30,7 @@ import de.gutenko.roguelike.habittracker.data.habits.HabitRepository
 import de.gutenko.roguelike.habittracker.data.player.GamePlayer
 import de.gutenko.roguelike.habittracker.notifications.HabitNotificationBroadcastReceiver
 import de.gutenko.roguelike.loop.MainActivity
+import kotlinx.android.synthetic.main.activity_stats.*
 import org.joda.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -95,12 +95,6 @@ class StatsActivity : AppCompatActivity() {
             supportFragmentManager,
             userId
         )
-
-        Thread.currentThread().uncaughtExceptionHandler =
-                Thread.UncaughtExceptionHandler { _, e ->
-                    e.printStackTrace()
-                    Log.d("StatsActivity", e.toString())
-                }
 
         toolbar.inflateMenu(R.menu.stats_menu)
 
